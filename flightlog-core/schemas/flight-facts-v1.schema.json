@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Mattbusel/flightlog/main/flightlog-core/schemas/flight-facts-v1.schema.json",
+  "title": "flight-facts v1",
+  "description": "Deterministic checks over one ArduPilot flight log. Every threshold is quoted from the ArduPilot wiki or read from the vehicle parameter the wiki names; every finding carries its time ranges in the log's own time base.",
+  "type": "object",
+  "required": ["$schema", "flight_facts_version", "generator", "log", "integrity", "armed", "params_used", "summary", "checks", "events"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "flight_facts_version": {"type": "string", "pattern": "^1\\.[0-9]+$"},
+    "generator": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {"name": {"type": "string"}, "version": {"type": "string"}}
+    },
+    "log": {
+      "type": "object",
+      "required": ["kind", "time_base", "duration_s", "message_types", "messages"],
+      "properties": {
+        "kind": {"enum": ["dataflash", "tlog"]},
+        "vehicle": {"type": ["string", "null"], "enum": ["copter", "plane", "rover", "sub", "heli", "blimp", "tracker", null]},
+        "firmware": {"type": ["string", "null"]},
+        "time_base": {"enum": ["boot_us", "unix_us"], "description": "boot_us: DataFlash TimeUS (microseconds since boot). unix_us: tlog record time (microseconds since the Unix epoch)."},
+        "start_us": {"type": ["integer", "null"], "minimum": 0},
+        "end_us": {"type": ["integer", "null"], "minimum": 0},
+        "duration_s": {"type": "number", "minimum": 0},
+        "utc_start": {"type": ["string", "null"], "format": "date-time"},
+        "message_types": {"type": "integer", "minimum": 0},
+        "messages": {"type": "integer", "minimum": 0}
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "required": ["bytes", "skipped_bytes", "skipped_regions", "truncated_tail_bytes", "bad_crc", "invalid_formats", "clean"],
+      "properties": {
+        "bytes": {"type": "integer", "minimum": 0},
+        "skipped_bytes": {"type": "integer", "minimum": 0},
+        "skipped_regions": {"type": "integer", "minimum": 0},
+        "truncated_tail_bytes": {"type": "integer", "minimum": 0},
+        "bad_crc": {"type": "integer", "minimum": 0},
+        "invalid_formats": {"type": "array", "items": {"type": "string"}},
+        "clean": {"type": "boolean"}
+      }
+    },
+    "armed": {
+      "type": "object",
+      "required": ["source", "total_s", "ranges"],
+      "properties": {
+        "source": {"type": "string"},
+        "total_s": {"type": "number", "minimum": 0},
+        "ranges": {"type": "array", "items": {"$ref": "#/$defs/range"}}
+      }
+    },
+    "params_used": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["value", "origin"],
+        "properties": {"value": {"type": ["number", "null"]}, "origin": {"enum": ["param", "param_default"]}}
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["pass", "info", "warn", "fail", "not_applicable"],
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    },
+    "checks": {"type": "array", "items": {"$ref": "#/$defs/check"}},
+    "events": {"type": "array", "items": {"$ref": "#/$defs/event"}}
+  },
+  "$defs": {
+    "range": {
+      "type": "object",
+      "required": ["start_us", "end_us", "start_s", "end_s", "detail"],
+      "properties": {
+        "start_us": {"type": "integer", "minimum": 0},
+        "end_us": {"type": "integer", "minimum": 0},
+        "start_s": {"type": "number", "description": "seconds from the first message of the log"},
+        "end_s": {"type": "number"},
+        "detail": {"type": "string"}
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["url", "quote", "wiki_file", "wiki_commit"],
+      "properties": {
+        "url": {"type": "string", "format": "uri"},
+        "quote": {"type": "string", "description": "verbatim sentence from the wiki page source"},
+        "wiki_file": {"type": "string"},
+        "wiki_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "threshold": {
+      "type": "object",
+      "required": ["name", "value", "unit", "origin"],
+      "properties": {
+        "name": {"type": "string"},
+        "value": {"type": "number"},
+        "unit": {"type": "string"},
+        "origin": {"type": "string", "description": "wiki, param (from the log), param_default (wiki default, log has no value) or flightlog option"}
+      }
+    },
+    "check": {
+      "type": "object",
+      "required": ["id", "status", "summary", "thresholds", "measured", "ranges", "evidence", "sources"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "v1 ids: vibration.levels, vibration.clipping, vibration.failsafe, ekf.variance, gps.hdop, gps.satellites, gps.glitch, battery.voltage, power.board_vcc, power.log_ends_armed, rc.failsafe, link.gcs_failsafe",
+          "pattern": "^[a-z_]+\\.[a-z_]+$"
+        },
+        "status": {"enum": ["pass", "info", "warn", "fail", "not_applicable"]},
+        "summary": {"type": "string"},
+        "thresholds": {"type": "array", "items": {"$ref": "#/$defs/threshold"}},
+        "measured": {"type": "object"},
+        "ranges": {"type": "array", "items": {"$ref": "#/$defs/range"}},
+        "evidence": {"type": "array", "items": {"type": "string"}},
+        "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}}
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": ["time_us", "t_s", "kind", "text"],
+      "properties": {
+        "time_us": {"type": "integer", "minimum": 0},
+        "t_s": {"type": "number"},
+        "kind": {"enum": ["error", "armed", "disarmed", "mode", "text"]},
+        "text": {"type": "string"},
+        "code": {"type": "integer"},
+        "subcode": {"type": "integer"}
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+/target
+/fuzz/target
+/fuzz/corpus
+/fuzz/artifacts
+/testdata/external/
+__pycache__/
+*.pyc
+*.so
+*.pyd
+.venv/
+.pytest_cache/
+.hypothesis/
+python/dist/
+*.pdb

@@ -1,0 +1,40 @@
+[package]
+name = "flightlog-core"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version = "1.88"
+description = "ArduPilot DataFlash (.bin) and MAVLink .tlog flight logs as typed columnar tables (Arrow optional), with damaged-log recovery and flight-facts: deterministic log checks that cite ArduPilot wiki thresholds"
+documentation = "https://docs.rs/flightlog-core"
+readme = "README.md"
+keywords = ["ardupilot", "mavlink", "dataflash", "drone", "arrow"]
+categories = ["aerospace::drones", "parser-implementations", "science"]
+exclude = ["tests/"]
+
+[features]
+default = ["facts"]
+## flight-facts checks and JSON output (serde_json).
+facts = ["dep:serde", "dep:serde_json"]
+## Convert tables to Arrow `RecordBatch` (arrow-array / arrow-schema).
+arrow = ["dep:arrow-array", "dep:arrow-schema", "dep:arrow-buffer"]
+
+[dependencies]
+mavlink-tlog = "0.1"
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+arrow-array = { version = "60.1", optional = true, default-features = false }
+arrow-schema = { version = "60.1", optional = true, default-features = false }
+arrow-buffer = { version = "60.1", optional = true, default-features = false }
+
+[dev-dependencies]
+proptest = "1"
+serde_json = "1"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[[example]]
+name = "facts"
+required-features = ["facts"]

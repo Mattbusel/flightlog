@@ -1,0 +1,2341 @@
+{
+ "pymavlink": "2.4.50",
+ "kind": "tlog",
+ "types": {
+  "HEARTBEAT": {
+   "count": 1426,
+   "first": {
+    "timestamp_us": 1794953463449647,
+    "sys_id": 250,
+    "comp_id": 250,
+    "type": 6,
+    "autopilot": 8,
+    "base_mode": 0,
+    "custom_mode": 0,
+    "system_status": 0,
+    "mavlink_version": 3
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "277318"
+    },
+    "comp_id": {
+     "int": "277318"
+    },
+    "type": {
+     "int": "7284"
+    },
+    "autopilot": {
+     "int": "9818"
+    },
+    "base_mode": {
+     "int": "48134"
+    },
+    "custom_mode": {
+     "int": "892"
+    },
+    "system_status": {
+     "int": "1076"
+    },
+    "mavlink_version": {
+     "int": "4278"
+    }
+   }
+  },
+  "PARAM_VALUE": {
+   "count": 3128,
+   "first": {
+    "timestamp_us": 1794953463454252,
+    "sys_id": 1,
+    "comp_id": 1,
+    "param_id": "MOT_PWM_MIN",
+    "param_value": 1000.0,
+    "param_type": 4,
+    "param_count": 1421,
+    "param_index": 65535
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "3128"
+    },
+    "comp_id": {
+     "int": "3128"
+    },
+    "param_id": {
+     "text": 3415053458
+    },
+    "param_value": {
+     "float": "88681999.74399048"
+    },
+    "param_type": {
+     "int": "17987"
+    },
+    "param_count": {
+     "int": "4486215"
+    },
+    "param_index": {
+     "int": "19094022"
+    }
+   }
+  },
+  "STATUSTEXT": {
+   "count": 1786,
+   "first": {
+    "timestamp_us": 1794953463454932,
+    "sys_id": 1,
+    "comp_id": 1,
+    "severity": 7,
+    "text": "RCInput: decoding UDP (Pulses)",
+    "id": 0,
+    "chunk_seq": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "420853"
+    },
+    "comp_id": {
+     "int": "420853"
+    },
+    "severity": {
+     "int": "7358"
+    },
+    "text": {
+     "text": 163231500
+    },
+    "id": {
+     "int": "200731"
+    },
+    "chunk_seq": {
+     "int": "1356"
+    }
+   }
+  },
+  "TIMESYNC": {
+   "count": 81,
+   "first": {
+    "timestamp_us": 1794953463458447,
+    "sys_id": 250,
+    "comp_id": 250,
+    "tc1": 0,
+    "ts1": 588410519802
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "6804"
+    },
+    "comp_id": {
+     "int": "6804"
+    },
+    "tc1": {
+     "int": "1187497675000"
+    },
+    "ts1": {
+     "int": "36289573069127"
+    }
+   }
+  },
+  "REQUEST_DATA_STREAM": {
+   "count": 5,
+   "first": {
+    "timestamp_us": 1794953463458581,
+    "sys_id": 250,
+    "comp_id": 250,
+    "target_system": 1,
+    "target_component": 1,
+    "req_stream_id": 0,
+    "req_message_rate": 5,
+    "start_stop": 1
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1250"
+    },
+    "comp_id": {
+     "int": "1250"
+    },
+    "target_system": {
+     "int": "5"
+    },
+    "target_component": {
+     "int": "5"
+    },
+    "req_stream_id": {
+     "int": "0"
+    },
+    "req_message_rate": {
+     "int": "25"
+    },
+    "start_stop": {
+     "int": "5"
+    }
+   }
+  },
+  "AHRS": {
+   "count": 1110,
+   "first": {
+    "timestamp_us": 1794953463466524,
+    "sys_id": 1,
+    "comp_id": 1,
+    "omegaIx": 0.0,
+    "omegaIy": 0.0,
+    "omegaIz": 0.0,
+    "accel_weight": 0.0,
+    "renorm_val": 0.0,
+    "error_rp": 0.8000106811523438,
+    "error_yaw": 0.6400009989738464
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1110"
+    },
+    "comp_id": {
+     "int": "1110"
+    },
+    "omegaIx": {
+     "float": "-0.016488499051774852"
+    },
+    "omegaIy": {
+     "float": "-0.0142557335748279"
+    },
+    "omegaIz": {
+     "float": "0.7497962347842986"
+    },
+    "accel_weight": {
+     "float": "0.0"
+    },
+    "renorm_val": {
+     "float": "0.0"
+    },
+    "error_rp": {
+     "float": "14.350537099599023"
+    },
+    "error_yaw": {
+     "float": "17.11532839256688"
+    }
+   }
+  },
+  "AHRS2": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463463871,
+    "sys_id": 1,
+    "comp_id": 1,
+    "roll": 0.0,
+    "pitch": 0.0,
+    "yaw": 0.0,
+    "altitude": 0.0,
+    "lat": 0,
+    "lng": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "roll": {
+     "float": "1.2873938968727998"
+    },
+    "pitch": {
+     "float": "2.19101492405548"
+    },
+    "yaw": {
+     "float": "-1732.1033916473389"
+    },
+    "altitude": {
+     "float": "637211.9027709961"
+    },
+    "lat": {
+     "int": "-389345952841"
+    },
+    "lng": {
+     "int": "1642307579052"
+    }
+   }
+  },
+  "ATTITUDE": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463463899,
+    "sys_id": 1,
+    "comp_id": 1,
+    "time_boot_ms": 2519,
+    "roll": 0.00010803138138726354,
+    "pitch": -4.6835648390697315e-05,
+    "yaw": 2.0136255898250965e-06,
+    "rollspeed": -1.945188887475524e-05,
+    "pitchspeed": -4.71920648124069e-05,
+    "yawspeed": 5.629398219753057e-05
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "time_boot_ms": {
+     "int": "75361125"
+    },
+    "roll": {
+     "float": "-0.00014846623298581108"
+    },
+    "pitch": {
+     "float": "-0.1335965353082429"
+    },
+    "yaw": {
+     "float": "-1743.2541290650945"
+    },
+    "rollspeed": {
+     "float": "1.168522605162707"
+    },
+    "pitchspeed": {
+     "float": "0.8388845536046574"
+    },
+    "yawspeed": {
+     "float": "1.7475519429012252"
+    }
+   }
+  },
+  "GLOBAL_POSITION_INT": {
+   "count": 1406,
+   "first": {
+    "timestamp_us": 1794953463463925,
+    "sys_id": 1,
+    "comp_id": 1,
+    "time_boot_ms": 2519,
+    "lat": 0,
+    "lon": 0,
+    "alt": 0,
+    "relative_alt": 0,
+    "vx": 0,
+    "vy": 0,
+    "vz": 0,
+    "hdg": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1406"
+    },
+    "comp_id": {
+     "int": "1406"
+    },
+    "time_boot_ms": {
+     "int": "86471310"
+    },
+    "lat": {
+     "int": "-493666621692"
+    },
+    "lon": {
+     "int": "2082344577601"
+    },
+    "alt": {
+     "int": "825264630"
+    },
+    "relative_alt": {
+     "int": "9875206"
+    },
+    "vx": {
+     "int": "300"
+    },
+    "vy": {
+     "int": "299"
+    },
+    "vz": {
+     "int": "-14019"
+    },
+    "hdg": {
+     "int": "37937440"
+    }
+   }
+  },
+  "VFR_HUD": {
+   "count": 1113,
+   "first": {
+    "timestamp_us": 1794953463463948,
+    "sys_id": 1,
+    "comp_id": 1,
+    "airspeed": 0.0,
+    "groundspeed": 0.0,
+    "heading": 0,
+    "throttle": 0,
+    "alt": 0.0,
+    "climb": 0.0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1113"
+    },
+    "comp_id": {
+     "int": "1113"
+    },
+    "airspeed": {
+     "float": "10.448860439355485"
+    },
+    "groundspeed": {
+     "float": "11.28041656115732"
+    },
+    "heading": {
+     "int": "299334"
+    },
+    "throttle": {
+     "int": "28580"
+    },
+    "alt": {
+     "float": "651847.2985229492"
+    },
+    "climb": {
+     "float": "0.00502800904348695"
+    }
+   }
+  },
+  "SYS_STATUS": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463463971,
+    "sys_id": 1,
+    "comp_id": 1,
+    "onboard_control_sensors_present": 1395784719,
+    "onboard_control_sensors_enabled": 1375837199,
+    "onboard_control_sensors_health": 1158781963,
+    "load": 0,
+    "voltage_battery": 0,
+    "current_battery": -1,
+    "battery_remaining": -1,
+    "drop_rate_comm": 0,
+    "errors_comm": 0,
+    "errors_count1": 0,
+    "errors_count2": 0,
+    "errors_count3": 0,
+    "errors_count4": 0,
+    "onboard_control_sensors_present_extended": 0,
+    "onboard_control_sensors_enabled_extended": 0,
+    "onboard_control_sensors_health_extended": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "onboard_control_sensors_present": {
+     "int": "1555372535481"
+    },
+    "onboard_control_sensors_enabled": {
+     "int": "1552725077689"
+    },
+    "onboard_control_sensors_health": {
+     "int": "1625763638965"
+    },
+    "load": {
+     "int": "8"
+    },
+    "voltage_battery": {
+     "int": "13760700"
+    },
+    "current_battery": {
+     "int": "2247085"
+    },
+    "battery_remaining": {
+     "int": "99013"
+    },
+    "drop_rate_comm": {
+     "int": "0"
+    },
+    "errors_comm": {
+     "int": "0"
+    },
+    "errors_count1": {
+     "int": "0"
+    },
+    "errors_count2": {
+     "int": "0"
+    },
+    "errors_count3": {
+     "int": "0"
+    },
+    "errors_count4": {
+     "int": "0"
+    },
+    "onboard_control_sensors_present_extended": {
+     "int": "0"
+    },
+    "onboard_control_sensors_enabled_extended": {
+     "int": "0"
+    },
+    "onboard_control_sensors_health_extended": {
+     "int": "0"
+    }
+   }
+  },
+  "POWER_STATUS": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463463997,
+    "sys_id": 1,
+    "comp_id": 1,
+    "Vcc": 5000,
+    "Vservo": 0,
+    "flags": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "Vcc": {
+     "int": "5555000"
+    },
+    "Vservo": {
+     "int": "0"
+    },
+    "flags": {
+     "int": "0"
+    }
+   }
+  },
+  "MEMINFO": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463464026,
+    "sys_id": 1,
+    "comp_id": 1,
+    "brkval": 0,
+    "freemem": 65535,
+    "freemem32": 524288
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "brkval": {
+     "int": "0"
+    },
+    "freemem": {
+     "int": "72809385"
+    },
+    "freemem32": {
+     "int": "582483968"
+    }
+   }
+  },
+  "NAV_CONTROLLER_OUTPUT": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463464051,
+    "sys_id": 1,
+    "comp_id": 1,
+    "nav_roll": 0.0,
+    "nav_pitch": 0.0,
+    "nav_bearing": 0,
+    "target_bearing": 0,
+    "wp_dist": 0,
+    "alt_error": -0.0,
+    "aspd_error": 0.0,
+    "xtrack_error": 0.0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "nav_roll": {
+     "float": "9.630986035897195"
+    },
+    "nav_pitch": {
+     "float": "3.0267995393551246"
+    },
+    "nav_bearing": {
+     "int": "-99291"
+    },
+    "target_bearing": {
+     "int": "13104"
+    },
+    "wp_dist": {
+     "int": "0"
+    },
+    "alt_error": {
+     "float": "-1.6610238163837323"
+    },
+    "aspd_error": {
+     "float": "0.0"
+    },
+    "xtrack_error": {
+     "float": "0.958643897494887"
+    }
+   }
+  },
+  "MISSION_CURRENT": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463464072,
+    "sys_id": 1,
+    "comp_id": 1,
+    "seq": 0,
+    "total": 0,
+    "mission_state": 1,
+    "mission_mode": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "seq": {
+     "int": "0"
+    },
+    "total": {
+     "int": "0"
+    },
+    "mission_state": {
+     "int": "1111"
+    },
+    "mission_mode": {
+     "int": "0"
+    }
+   }
+  },
+  "SERVO_OUTPUT_RAW": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463464137,
+    "sys_id": 1,
+    "comp_id": 1,
+    "time_usec": 2519825,
+    "port": 0,
+    "servo1_raw": 1000,
+    "servo2_raw": 1000,
+    "servo3_raw": 1000,
+    "servo4_raw": 1000,
+    "servo5_raw": 0,
+    "servo6_raw": 0,
+    "servo7_raw": 0,
+    "servo8_raw": 0,
+    "servo9_raw": 0,
+    "servo10_raw": 0,
+    "servo11_raw": 0,
+    "servo12_raw": 0,
+    "servo13_raw": 0,
+    "servo14_raw": 0,
+    "servo15_raw": 0,
+    "servo16_raw": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "time_usec": {
+     "int": "75361490841"
+    },
+    "port": {
+     "int": "0"
+    },
+    "servo1_raw": {
+     "int": "1587677"
+    },
+    "servo2_raw": {
+     "int": "1587608"
+    },
+    "servo3_raw": {
+     "int": "1587696"
+    },
+    "servo4_raw": {
+     "int": "1587612"
+    },
+    "servo5_raw": {
+     "int": "0"
+    },
+    "servo6_raw": {
+     "int": "0"
+    },
+    "servo7_raw": {
+     "int": "0"
+    },
+    "servo8_raw": {
+     "int": "0"
+    },
+    "servo9_raw": {
+     "int": "0"
+    },
+    "servo10_raw": {
+     "int": "0"
+    },
+    "servo11_raw": {
+     "int": "0"
+    },
+    "servo12_raw": {
+     "int": "0"
+    },
+    "servo13_raw": {
+     "int": "0"
+    },
+    "servo14_raw": {
+     "int": "0"
+    },
+    "servo15_raw": {
+     "int": "0"
+    },
+    "servo16_raw": {
+     "int": "0"
+    }
+   }
+  },
+  "RC_CHANNELS": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463464167,
+    "sys_id": 1,
+    "comp_id": 1,
+    "time_boot_ms": 2519,
+    "chancount": 8,
+    "chan1_raw": 1500,
+    "chan2_raw": 1500,
+    "chan3_raw": 1000,
+    "chan4_raw": 1500,
+    "chan5_raw": 1800,
+    "chan6_raw": 1000,
+    "chan7_raw": 1000,
+    "chan8_raw": 1800,
+    "chan9_raw": 0,
+    "chan10_raw": 0,
+    "chan11_raw": 0,
+    "chan12_raw": 0,
+    "chan13_raw": 0,
+    "chan14_raw": 0,
+    "chan15_raw": 0,
+    "chan16_raw": 0,
+    "chan17_raw": 0,
+    "chan18_raw": 0,
+    "rssi": 255
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "time_boot_ms": {
+     "int": "75361125"
+    },
+    "chancount": {
+     "int": "17584"
+    },
+    "chan1_raw": {
+     "int": "1666500"
+    },
+    "chan2_raw": {
+     "int": "1666500"
+    },
+    "chan3_raw": {
+     "int": "1396000"
+    },
+    "chan4_raw": {
+     "int": "1666500"
+    },
+    "chan5_raw": {
+     "int": "1999800"
+    },
+    "chan6_raw": {
+     "int": "1654500"
+    },
+    "chan7_raw": {
+     "int": "1654500"
+    },
+    "chan8_raw": {
+     "int": "1673700"
+    },
+    "chan9_raw": {
+     "int": "1630500"
+    },
+    "chan10_raw": {
+     "int": "1630500"
+    },
+    "chan11_raw": {
+     "int": "1630500"
+    },
+    "chan12_raw": {
+     "int": "1630500"
+    },
+    "chan13_raw": {
+     "int": "1630500"
+    },
+    "chan14_raw": {
+     "int": "1630500"
+    },
+    "chan15_raw": {
+     "int": "1630500"
+    },
+    "chan16_raw": {
+     "int": "1630500"
+    },
+    "chan17_raw": {
+     "int": "0"
+    },
+    "chan18_raw": {
+     "int": "0"
+    },
+    "rssi": {
+     "int": "283305"
+    }
+   }
+  },
+  "RAW_IMU": {
+   "count": 1115,
+   "first": {
+    "timestamp_us": 1794953463464205,
+    "sys_id": 1,
+    "comp_id": 1,
+    "time_usec": 2519825,
+    "xacc": 0,
+    "yacc": 0,
+    "zacc": -1001,
+    "xgyro": 0,
+    "ygyro": 0,
+    "zgyro": 0,
+    "xmag": 0,
+    "ymag": 0,
+    "zmag": 0,
+    "id": 0,
+    "temperature": 2503
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1115"
+    },
+    "comp_id": {
+     "int": "1115"
+    },
+    "time_usec": {
+     "int": "75430564867"
+    },
+    "xacc": {
+     "int": "9"
+    },
+    "yacc": {
+     "int": "38"
+    },
+    "zacc": {
+     "int": "-1115808"
+    },
+    "xgyro": {
+     "int": "962"
+    },
+    "ygyro": {
+     "int": "660"
+    },
+    "zgyro": {
+     "int": "785"
+    },
+    "xmag": {
+     "int": "-58025"
+    },
+    "ymag": {
+     "int": "258300"
+    },
+    "zmag": {
+     "int": "-588293"
+    },
+    "id": {
+     "int": "0"
+    },
+    "temperature": {
+     "int": "3215351"
+    }
+   }
+  },
+  "SCALED_IMU2": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463464233,
+    "sys_id": 1,
+    "comp_id": 1,
+    "time_boot_ms": 2519,
+    "xacc": 0,
+    "yacc": 0,
+    "zacc": -1001,
+    "xgyro": 0,
+    "ygyro": 0,
+    "zgyro": 0,
+    "xmag": 0,
+    "ymag": 0,
+    "zmag": 0,
+    "temperature": 2503
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "time_boot_ms": {
+     "int": "75361125"
+    },
+    "xacc": {
+     "int": "56"
+    },
+    "yacc": {
+     "int": "-103"
+    },
+    "zacc": {
+     "int": "-1111894"
+    },
+    "xgyro": {
+     "int": "845"
+    },
+    "ygyro": {
+     "int": "813"
+    },
+    "zgyro": {
+     "int": "636"
+    },
+    "xmag": {
+     "int": "-57817"
+    },
+    "ymag": {
+     "int": "257372"
+    },
+    "zmag": {
+     "int": "-586181"
+    },
+    "temperature": {
+     "int": "3204957"
+    }
+   }
+  },
+  "SCALED_IMU3": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463464257,
+    "sys_id": 1,
+    "comp_id": 1,
+    "time_boot_ms": 2519,
+    "xacc": 0,
+    "yacc": 0,
+    "zacc": 0,
+    "xgyro": 0,
+    "ygyro": 0,
+    "zgyro": 0,
+    "xmag": 0,
+    "ymag": 0,
+    "zmag": 0,
+    "temperature": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "time_boot_ms": {
+     "int": "75361125"
+    },
+    "xacc": {
+     "int": "0"
+    },
+    "yacc": {
+     "int": "0"
+    },
+    "zacc": {
+     "int": "0"
+    },
+    "xgyro": {
+     "int": "0"
+    },
+    "ygyro": {
+     "int": "0"
+    },
+    "zgyro": {
+     "int": "0"
+    },
+    "xmag": {
+     "int": "-57817"
+    },
+    "ymag": {
+     "int": "257372"
+    },
+    "zmag": {
+     "int": "-586181"
+    },
+    "temperature": {
+     "int": "0"
+    }
+   }
+  },
+  "SCALED_PRESSURE": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463464280,
+    "sys_id": 1,
+    "comp_id": 1,
+    "time_boot_ms": 2519,
+    "press_abs": 945.0282592773438,
+    "press_diff": 0.0,
+    "temperature": 2536,
+    "temperature_press_diff": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "time_boot_ms": {
+     "int": "75361125"
+    },
+    "press_abs": {
+     "float": "1049067.727722168"
+    },
+    "press_diff": {
+     "float": "0.0"
+    },
+    "temperature": {
+     "int": "3341124"
+    },
+    "temperature_press_diff": {
+     "int": "0"
+    }
+   }
+  },
+  "SCALED_PRESSURE2": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463464298,
+    "sys_id": 1,
+    "comp_id": 1,
+    "time_boot_ms": 2519,
+    "press_abs": 945.024169921875,
+    "press_diff": 0.0,
+    "temperature": 2536,
+    "temperature_press_diff": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "time_boot_ms": {
+     "int": "75361125"
+    },
+    "press_abs": {
+     "float": "1049067.958618164"
+    },
+    "press_diff": {
+     "float": "0.0"
+    },
+    "temperature": {
+     "int": "3341121"
+    },
+    "temperature_press_diff": {
+     "int": "0"
+    }
+   }
+  },
+  "GPS_RAW_INT": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463464321,
+    "sys_id": 1,
+    "comp_id": 1,
+    "time_usec": 0,
+    "fix_type": 0,
+    "lat": 0,
+    "lon": 0,
+    "alt": 0,
+    "eph": 65535,
+    "epv": 65535,
+    "vel": 0,
+    "cog": 0,
+    "satellites_visible": 0,
+    "alt_ellipsoid": 0,
+    "h_acc": 0,
+    "v_acc": 0,
+    "vel_acc": 0,
+    "hdg_acc": 0,
+    "yaw": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "time_usec": {
+     "int": "75222263000"
+    },
+    "fix_type": {
+     "int": "6606"
+    },
+    "lat": {
+     "int": "-389345952883"
+    },
+    "lon": {
+     "int": "1642307578999"
+    },
+    "alt": {
+     "int": "650648430"
+    },
+    "eph": {
+     "int": "788571"
+    },
+    "epv": {
+     "int": "875550"
+    },
+    "vel": {
+     "int": "742"
+    },
+    "cog": {
+     "int": "18840689"
+    },
+    "satellites_visible": {
+     "int": "11010"
+    },
+    "alt_ellipsoid": {
+     "int": "650648430"
+    },
+    "h_acc": {
+     "int": "330300"
+    },
+    "v_acc": {
+     "int": "330300"
+    },
+    "vel_acc": {
+     "int": "0"
+    },
+    "hdg_acc": {
+     "int": "0"
+    },
+    "yaw": {
+     "int": "0"
+    }
+   }
+  },
+  "SYSTEM_TIME": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463464340,
+    "sys_id": 1,
+    "comp_id": 1,
+    "time_unix_usec": 0,
+    "time_boot_ms": 2519
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "time_unix_usec": {
+     "int": "1976243839070757792"
+    },
+    "time_boot_ms": {
+     "int": "75361125"
+    }
+   }
+  },
+  "SIMSTATE": {
+   "count": 1116,
+   "first": {
+    "timestamp_us": 1794953463464433,
+    "sys_id": 1,
+    "comp_id": 1,
+    "roll": 0.0,
+    "pitch": 0.0,
+    "yaw": -1.5707963705062866,
+    "xacc": -0.0,
+    "yacc": 0.0,
+    "zacc": -9.806650161743164,
+    "xgyro": 0.0,
+    "ygyro": 0.0,
+    "zgyro": 0.0,
+    "lat": -353629380,
+    "lng": 1491650850
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1116"
+    },
+    "comp_id": {
+     "int": "1116"
+    },
+    "roll": {
+     "float": "0.00041365007240301566"
+    },
+    "pitch": {
+     "float": "-0.0006637034729237712"
+    },
+    "yaw": {
+     "float": "-1753.3906265497208"
+    },
+    "xacc": {
+     "float": "0.004461687297600209"
+    },
+    "yacc": {
+     "float": "-0.036105816070702235"
+    },
+    "zacc": {
+     "float": "-10948.780758857727"
+    },
+    "xgyro": {
+     "float": "-0.048259581251961864"
+    },
+    "ygyro": {
+     "float": "0.2730060588997515"
+    },
+    "zgyro": {
+     "float": "-0.008034057445030385"
+    },
+    "lat": {
+     "int": "-394650393602"
+    },
+    "lng": {
+     "int": "1664682341759"
+    }
+   }
+  },
+  "TERRAIN_REPORT": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463464454,
+    "sys_id": 1,
+    "comp_id": 1,
+    "lat": 0,
+    "lon": 0,
+    "spacing": 0,
+    "terrain_height": 0.0,
+    "current_height": 0.0,
+    "pending": 0,
+    "loaded": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "lat": {
+     "int": "-389345952895"
+    },
+    "lon": {
+     "int": "1642307579009"
+    },
+    "spacing": {
+     "int": "900"
+    },
+    "terrain_height": {
+     "float": "0.0"
+    },
+    "current_height": {
+     "float": "0.0"
+    },
+    "pending": {
+     "int": "555408"
+    },
+    "loaded": {
+     "int": "0"
+    }
+   }
+  },
+  "VIBRATION": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463464472,
+    "sys_id": 1,
+    "comp_id": 1,
+    "time_usec": 2519825,
+    "vibration_x": 0.003053892171010375,
+    "vibration_y": 0.002977136056870222,
+    "vibration_z": 0.0027536298148334026,
+    "clipping_0": 0,
+    "clipping_1": 0,
+    "clipping_2": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "time_usec": {
+     "int": "75361490841"
+    },
+    "vibration_x": {
+     "float": "2692.605463183485"
+    },
+    "vibration_y": {
+     "float": "2692.6048670005985"
+    },
+    "vibration_z": {
+     "float": "2701.537199588027"
+    },
+    "clipping_0": {
+     "int": "0"
+    },
+    "clipping_1": {
+     "int": "0"
+    },
+    "clipping_2": {
+     "int": "0"
+    }
+   }
+  },
+  "BATTERY_STATUS": {
+   "count": 1111,
+   "first": {
+    "timestamp_us": 1794953463464515,
+    "sys_id": 1,
+    "comp_id": 1,
+    "id": 0,
+    "battery_function": 0,
+    "type": 0,
+    "temperature": 32767,
+    "voltages": [
+     65535,
+     65535,
+     65535,
+     65535,
+     65535,
+     65535,
+     65535,
+     65535,
+     65535,
+     65535
+    ],
+    "current_battery": 0,
+    "current_consumed": 0,
+    "energy_consumed": 0,
+    "battery_remaining": -1,
+    "time_remaining": 0,
+    "charge_state": 6,
+    "voltages_ext": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "mode": 0,
+    "fault_bitmask": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1111"
+    },
+    "comp_id": {
+     "int": "1111"
+    },
+    "id": {
+     "int": "0"
+    },
+    "battery_function": {
+     "int": "0"
+    },
+    "type": {
+     "int": "0"
+    },
+    "temperature": {
+     "int": "36404137"
+    },
+    "voltages": {
+     "int": "669110700"
+    },
+    "current_battery": {
+     "int": "2247086"
+    },
+    "current_consumed": {
+     "int": "377817"
+    },
+    "energy_consumed": {
+     "int": "167254"
+    },
+    "battery_remaining": {
+     "int": "99013"
+    },
+    "time_remaining": {
+     "int": "0"
+    },
+    "charge_state": {
+     "int": "1116"
+    },
+    "voltages_ext": {
+     "int": "0"
+    },
+    "mode": {
+     "int": "0"
+    },
+    "fault_bitmask": {
+     "int": "0"
+    }
+   }
+  },
+  "TERRAIN_REQUEST": {
+   "count": 120,
+   "first": {
+    "timestamp_us": 1794953463467153,
+    "sys_id": 1,
+    "comp_id": 1,
+    "lat": -353747690,
+    "lon": 1491548424,
+    "grid_spacing": 100,
+    "mask": 72057594037927935
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "120"
+    },
+    "comp_id": {
+     "int": "120"
+    },
+    "lat": {
+     "int": "-42449722800"
+    },
+    "lon": {
+     "int": "178985810880"
+    },
+    "grid_spacing": {
+     "int": "12000"
+    },
+    "mask": {
+     "int": "8646911284551352200"
+    }
+   }
+  },
+  "COMMAND_LONG": {
+   "count": 328,
+   "first": {
+    "timestamp_us": 1794953463469377,
+    "sys_id": 250,
+    "comp_id": 250,
+    "target_system": 1,
+    "target_component": 1,
+    "command": 520,
+    "confirmation": 0,
+    "param1": 1.0,
+    "param2": 0.0,
+    "param3": 0.0,
+    "param4": 0.0,
+    "param5": 0.0,
+    "param6": 0.0,
+    "param7": 0.0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "82000"
+    },
+    "comp_id": {
+     "int": "82000"
+    },
+    "target_system": {
+     "int": "328"
+    },
+    "target_component": {
+     "int": "328"
+    },
+    "command": {
+     "int": "164772"
+    },
+    "confirmation": {
+     "int": "327"
+    },
+    "param1": {
+     "float": "10715.0"
+    },
+    "param2": {
+     "float": "20.0"
+    },
+    "param3": {
+     "float": "0.0"
+    },
+    "param4": {
+     "float": "0.0"
+    },
+    "param5": {
+     "float": "0.0"
+    },
+    "param6": {
+     "float": "0.0"
+    },
+    "param7": {
+     "float": "0.0"
+    }
+   }
+  },
+  "COMMAND_ACK": {
+   "count": 328,
+   "first": {
+    "timestamp_us": 1794953463469449,
+    "sys_id": 1,
+    "comp_id": 1,
+    "command": 520,
+    "result": 0,
+    "progress": 0,
+    "result_param2": 0,
+    "target_system": 250,
+    "target_component": 250
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "328"
+    },
+    "comp_id": {
+     "int": "328"
+    },
+    "command": {
+     "int": "164772"
+    },
+    "result": {
+     "int": "0"
+    },
+    "progress": {
+     "int": "0"
+    },
+    "result_param2": {
+     "int": "0"
+    },
+    "target_system": {
+     "int": "82000"
+    },
+    "target_component": {
+     "int": "82000"
+    }
+   }
+  },
+  "AUTOPILOT_VERSION": {
+   "count": 1,
+   "first": {
+    "timestamp_us": 1794953463469485,
+    "sys_id": 1,
+    "comp_id": 1,
+    "capabilities": 64495,
+    "flight_sw_version": 67633152,
+    "middleware_sw_version": 0,
+    "os_sw_version": 0,
+    "board_version": 0,
+    "flight_custom_version": [
+     99,
+     97,
+     49,
+     51,
+     55,
+     97,
+     56,
+     54
+    ],
+    "middleware_custom_version": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "os_custom_version": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "vendor_id": 0,
+    "product_id": 0,
+    "uid": 0,
+    "uid2": [
+     101,
+     48,
+     54,
+     101,
+     55,
+     53,
+     99,
+     98,
+     101,
+     57,
+     55,
+     97,
+     52,
+     51,
+     102,
+     54,
+     97,
+     0
+    ]
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1"
+    },
+    "comp_id": {
+     "int": "1"
+    },
+    "capabilities": {
+     "int": "64495"
+    },
+    "flight_sw_version": {
+     "int": "67633152"
+    },
+    "middleware_sw_version": {
+     "int": "0"
+    },
+    "os_sw_version": {
+     "int": "0"
+    },
+    "board_version": {
+     "int": "0"
+    },
+    "flight_custom_version": {
+     "int": "558"
+    },
+    "middleware_custom_version": {
+     "int": "0"
+    },
+    "os_custom_version": {
+     "int": "0"
+    },
+    "vendor_id": {
+     "int": "0"
+    },
+    "product_id": {
+     "int": "0"
+    },
+    "uid": {
+     "int": "0"
+    },
+    "uid2": {
+     "int": "1275"
+    }
+   }
+  },
+  "EKF_STATUS_REPORT": {
+   "count": 1106,
+   "first": {
+    "timestamp_us": 1794953463474916,
+    "sys_id": 1,
+    "comp_id": 1,
+    "flags": 1024,
+    "velocity_variance": 0.0,
+    "pos_horiz_variance": 0.0,
+    "pos_vert_variance": 0.0,
+    "compass_variance": 0.0,
+    "terrain_alt_variance": 0.0,
+    "airspeed_variance": 0.0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1106"
+    },
+    "comp_id": {
+     "int": "1106"
+    },
+    "flags": {
+     "int": "961675"
+    },
+    "velocity_variance": {
+     "float": "0.08529007458128035"
+    },
+    "pos_horiz_variance": {
+     "float": "0.05195545667083934"
+    },
+    "pos_vert_variance": {
+     "float": "0.020456552131436823"
+    },
+    "compass_variance": {
+     "float": "1.8747839983552694"
+    },
+    "terrain_alt_variance": {
+     "float": "0.0"
+    },
+    "airspeed_variance": {
+     "float": "0.0"
+    }
+   }
+  },
+  "PARAM_REQUEST_READ": {
+   "count": 70,
+   "first": {
+    "timestamp_us": 1794953463475266,
+    "sys_id": 250,
+    "comp_id": 250,
+    "target_system": 1,
+    "target_component": 1,
+    "param_id": "LOG_DISARMED",
+    "param_index": -1
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "17500"
+    },
+    "comp_id": {
+     "int": "17500"
+    },
+    "target_system": {
+     "int": "70"
+    },
+    "target_component": {
+     "int": "70"
+    },
+    "param_id": {
+     "text": 1725266296
+    },
+    "param_index": {
+     "int": "-70"
+    }
+   }
+  },
+  "PARAM_SET": {
+   "count": 37,
+   "first": {
+    "timestamp_us": 1794953463477794,
+    "sys_id": 250,
+    "comp_id": 250,
+    "target_system": 1,
+    "target_component": 1,
+    "param_id": "LOG_DISARMED",
+    "param_value": 1.0,
+    "param_type": 9
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "9250"
+    },
+    "comp_id": {
+     "int": "9250"
+    },
+    "target_system": {
+     "int": "37"
+    },
+    "target_component": {
+     "int": "37"
+    },
+    "param_id": {
+     "text": 651432641
+    },
+    "param_value": {
+     "float": "182835.8230895996"
+    },
+    "param_type": {
+     "int": "333"
+    }
+   }
+  },
+  "ESC_TELEMETRY_1_TO_4": {
+   "count": 1101,
+   "first": {
+    "timestamp_us": 1794953463674325,
+    "sys_id": 1,
+    "comp_id": 1,
+    "temperature": [
+     32,
+     32,
+     32,
+     32
+    ],
+    "voltage": [
+     1679,
+     1679,
+     1679,
+     1679
+    ],
+    "current": [
+     80,
+     80,
+     80,
+     80
+    ],
+    "totalcurrent": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "rpm": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "count": [
+     4592,
+     4592,
+     4592,
+     4592
+    ]
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1101"
+    },
+    "comp_id": {
+     "int": "1101"
+    },
+    "temperature": {
+     "int": "140928"
+    },
+    "voltage": {
+     "int": "7394316"
+    },
+    "current": {
+     "int": "352320"
+    },
+    "totalcurrent": {
+     "int": "4404"
+    },
+    "rpm": {
+     "int": "47390198"
+    },
+    "count": {
+     "int": "109915892"
+    }
+   }
+  },
+  "GPS_GLOBAL_ORIGIN": {
+   "count": 8,
+   "first": {
+    "timestamp_us": 1794953463698701,
+    "sys_id": 1,
+    "comp_id": 1,
+    "latitude": -353629380,
+    "longitude": 1491650850,
+    "altitude": 584090,
+    "time_usec": 20011992
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "8"
+    },
+    "comp_id": {
+     "int": "8"
+    },
+    "latitude": {
+     "int": "-2829035040"
+    },
+    "longitude": {
+     "int": "11933206800"
+    },
+    "altitude": {
+     "int": "4672180"
+    },
+    "time_usec": {
+     "int": "126206997"
+    }
+   }
+  },
+  "HOME_POSITION": {
+   "count": 8,
+   "first": {
+    "timestamp_us": 1794953463698757,
+    "sys_id": 1,
+    "comp_id": 1,
+    "latitude": -353629380,
+    "longitude": 1491650850,
+    "altitude": 584090,
+    "x": 0.0,
+    "y": 0.0,
+    "z": -0.0,
+    "q": [
+     "nan",
+     "nan",
+     "nan",
+     "nan"
+    ],
+    "approach_x": 0.0,
+    "approach_y": 0.0,
+    "approach_z": 0.0,
+    "time_usec": 20011992
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "8"
+    },
+    "comp_id": {
+     "int": "8"
+    },
+    "latitude": {
+     "int": "-2829035040"
+    },
+    "longitude": {
+     "int": "11933206800"
+    },
+    "altitude": {
+     "int": "4672720"
+    },
+    "x": {
+     "float": "0.0"
+    },
+    "y": {
+     "float": "0.0"
+    },
+    "z": {
+     "float": "-0.5399999767541885"
+    },
+    "q": {
+     "float": "nan"
+    },
+    "approach_x": {
+     "float": "0.0"
+    },
+    "approach_y": {
+     "float": "0.0"
+    },
+    "approach_z": {
+     "float": "0.0"
+    },
+    "time_usec": {
+     "int": "126206997"
+    }
+   }
+  },
+  "MISSION_COUNT": {
+   "count": 6,
+   "first": {
+    "timestamp_us": 1794953463708728,
+    "sys_id": 250,
+    "comp_id": 250,
+    "target_system": 1,
+    "target_component": 1,
+    "count": 0,
+    "mission_type": 1
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1500"
+    },
+    "comp_id": {
+     "int": "1500"
+    },
+    "target_system": {
+     "int": "6"
+    },
+    "target_component": {
+     "int": "6"
+    },
+    "count": {
+     "int": "0"
+    },
+    "mission_type": {
+     "int": "6"
+    }
+   }
+  },
+  "MISSION_ACK": {
+   "count": 7,
+   "first": {
+    "timestamp_us": 1794953463708854,
+    "sys_id": 1,
+    "comp_id": 1,
+    "target_system": 250,
+    "target_component": 250,
+    "type": 0,
+    "mission_type": 1
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "7"
+    },
+    "comp_id": {
+     "int": "7"
+    },
+    "target_system": {
+     "int": "1750"
+    },
+    "target_component": {
+     "int": "1750"
+    },
+    "type": {
+     "int": "0"
+    },
+    "mission_type": {
+     "int": "6"
+    }
+   }
+  },
+  "PARAM_REQUEST_LIST": {
+   "count": 2,
+   "first": {
+    "timestamp_us": 1794953463710411,
+    "sys_id": 250,
+    "comp_id": 250,
+    "target_system": 1,
+    "target_component": 1
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "500"
+    },
+    "comp_id": {
+     "int": "500"
+    },
+    "target_system": {
+     "int": "2"
+    },
+    "target_component": {
+     "int": "2"
+    }
+   }
+  },
+  "MISSION_SET_CURRENT": {
+   "count": 2,
+   "first": {
+    "timestamp_us": 1794953463846310,
+    "sys_id": 250,
+    "comp_id": 250,
+    "target_system": 1,
+    "target_component": 1,
+    "seq": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "500"
+    },
+    "comp_id": {
+     "int": "500"
+    },
+    "target_system": {
+     "int": "2"
+    },
+    "target_component": {
+     "int": "2"
+    },
+    "seq": {
+     "int": "0"
+    }
+   }
+  },
+  "LOCAL_POSITION_NED": {
+   "count": 1062,
+   "first": {
+    "timestamp_us": 1794953463856001,
+    "sys_id": 1,
+    "comp_id": 1,
+    "time_boot_ms": 23479,
+    "x": 0.0,
+    "y": 0.0,
+    "z": -0.09000000357627869,
+    "vx": 0.0,
+    "vy": 0.0,
+    "vz": 0.0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "1062"
+    },
+    "comp_id": {
+     "int": "1062"
+    },
+    "time_boot_ms": {
+     "int": "74552808"
+    },
+    "x": {
+     "float": "-61.386139281094074"
+    },
+    "y": {
+     "float": "-62.07110925251618"
+    },
+    "z": {
+     "float": "-7662.123794879764"
+    },
+    "vx": {
+     "float": "0.09735579949772734"
+    },
+    "vy": {
+     "float": "0.06648626194567049"
+    },
+    "vz": {
+     "float": "0.08523509986389237"
+    }
+   }
+  },
+  "POSITION_TARGET_GLOBAL_INT": {
+   "count": 86,
+   "first": {
+    "timestamp_us": 1794953464520453,
+    "sys_id": 1,
+    "comp_id": 1,
+    "time_boot_ms": 63239,
+    "coordinate_frame": 0,
+    "type_mask": 65016,
+    "lat_int": -353629403,
+    "lon_int": 1491650823,
+    "alt": 598.5299682617188,
+    "vx": 0.0,
+    "vy": 0.0,
+    "vz": 0.0,
+    "afx": 0.0,
+    "afy": 0.0,
+    "afz": 0.0,
+    "yaw": 0.0,
+    "yaw_rate": 0.0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "86"
+    },
+    "comp_id": {
+     "int": "86"
+    },
+    "time_boot_ms": {
+     "int": "6285460"
+    },
+    "coordinate_frame": {
+     "int": "0"
+    },
+    "type_mask": {
+     "int": "5591376"
+    },
+    "lat_int": {
+     "int": "-30412126892"
+    },
+    "lon_int": {
+     "int": "128281972848"
+    },
+    "alt": {
+     "float": "51476.65759277344"
+    },
+    "vx": {
+     "float": "0.0"
+    },
+    "vy": {
+     "float": "0.0"
+    },
+    "vz": {
+     "float": "0.0"
+    },
+    "afx": {
+     "float": "0.0"
+    },
+    "afy": {
+     "float": "0.0"
+    },
+    "afz": {
+     "float": "0.0"
+    },
+    "yaw": {
+     "float": "0.0"
+    },
+    "yaw_rate": {
+     "float": "0.0"
+    }
+   }
+  },
+  "WIND": {
+   "count": 7,
+   "first": {
+    "timestamp_us": 1794953466433220,
+    "sys_id": 1,
+    "comp_id": 1,
+    "direction": -180.0,
+    "speed": 0.0,
+    "speed_z": 0.0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "7"
+    },
+    "comp_id": {
+     "int": "7"
+    },
+    "direction": {
+     "float": "-1260.0"
+    },
+    "speed": {
+     "float": "0.0"
+    },
+    "speed_z": {
+     "float": "0.0"
+    }
+   }
+  },
+  "MISSION_CLEAR_ALL": {
+   "count": 1,
+   "first": {
+    "timestamp_us": 1794953466737987,
+    "sys_id": 250,
+    "comp_id": 250,
+    "target_system": 1,
+    "target_component": 1,
+    "mission_type": 0
+   },
+   "fields": {
+    "timestamp_us": {
+     "int": "0"
+    },
+    "sys_id": {
+     "int": "250"
+    },
+    "comp_id": {
+     "int": "250"
+    },
+    "target_system": {
+     "int": "1"
+    },
+    "target_component": {
+     "int": "1"
+    },
+    "mission_type": {
+     "int": "0"
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,101 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 5 * * 1"
+permissions:
+  contents: read
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  rust:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: Test logs
+        if: matrix.os == 'ubuntu-latest'
+        run: bash tools/fetch_testdata.sh
+      - run: cargo test -p flightlog-core --release --all-features
+      - run: cargo test -p flightlog-core --release --no-default-features
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - run: cargo fmt --all -- --check
+        if: matrix.os == 'ubuntu-latest'
+
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85
+      - run: cargo check -p flightlog-core --all-features
+
+  generated:
+    # src/tlog/defs.rs and the pymavlink references must be reproducible.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pymavlink==2.4.50
+      - run: python tools/gen_defs.py && git diff --exit-code
+      - run: bash tools/fetch_testdata.sh
+      - name: Regenerate pymavlink references
+        run: |
+          for f in copter-mission.bin copter-mission-truncated.bin copter-mission-zeroblock.bin copter-mission-garbage.bin copter-gps-glitch-clean.tlog; do
+            python tools/pymavlink_reference.py "testdata/external/$f" > "testdata/$f.pymavlink.json"
+          done
+          git diff --exit-code
+      - name: Wiki quotes (pinned commit)
+        run: python tools/check_wiki_quotes.py
+      - name: Wiki quotes (master, weekly)
+        if: github.event_name == 'schedule'
+        run: python tools/check_wiki_quotes.py --latest
+
+  python:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.9", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test logs
+        if: matrix.os == 'ubuntu-latest'
+        run: bash tools/fetch_testdata.sh
+      - uses: PyO3/maturin-action@v1
+        with:
+          working-directory: python
+          args: --release --out dist
+          manylinux: auto
+      - name: Install and test
+        shell: bash
+        run: |
+          pip install python/dist/*.whl
+          pip install pytest hypothesis jsonschema polars
+          pip install pymavlink==2.4.50 || echo "pymavlink not installable here; its comparison tests skip"
+          if python -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)"; then pip install "mcp>=1.2"; fi
+          cd python && pytest tests -q
+
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo install cargo-fuzz --locked
+      - run: cd fuzz && cargo fuzz run read -- -max_total_time=60

@@ -1,0 +1,43 @@
+[build-system]
+requires = ["maturin>=1.7,<2"]
+build-backend = "maturin"
+
+[project]
+name = "flightlog"
+description = "ArduPilot DataFlash (.bin) and MAVLink .tlog flight logs as Arrow tables, flight-facts checks with ArduPilot wiki thresholds, and a read-only MCP server"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [{ name = "Matt Busel", email = "matt@busel.dev" }]
+keywords = ["ardupilot", "mavlink", "dataflash", "tlog", "drone", "arrow", "pyarrow", "polars", "mcp"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering",
+    "Operating System :: OS Independent",
+]
+dependencies = ["pyarrow>=14"]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+polars = ["polars>=0.20"]
+mcp = ["mcp>=1.2"]
+test = ["pytest>=7", "hypothesis>=6", "jsonschema>=4", "polars>=0.20", "pymavlink>=2.4.40", "mcp>=1.2"]
+
+[project.scripts]
+flightlog-mcp = "flightlog.mcp_server:main"
+flightlog = "flightlog.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Mattbusel/flightlog"
+Documentation = "https://github.com/Mattbusel/flightlog/tree/main/docs"
+Issues = "https://github.com/Mattbusel/flightlog/issues"
+
+[tool.maturin]
+module-name = "flightlog._flightlog"
+python-source = "."
+python-packages = ["flightlog"]
+features = ["pyo3/extension-module"]

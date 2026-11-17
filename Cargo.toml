@@ -1,0 +1,15 @@
+[workspace]
+members = ["flightlog-core", "python"]
+resolver = "2"
+exclude = ["fuzz"]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Matt Busel <matt@busel.dev>"]
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/Mattbusel/flightlog"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

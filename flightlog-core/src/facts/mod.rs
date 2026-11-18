@@ -33,7 +33,11 @@ pub const SCHEMA: &str = include_str!("../../schemas/flight-facts-v1.schema.json
 pub const SCHEMA_ID: &str = "https://raw.githubusercontent.com/Mattbusel/flightlog/main/flightlog-core/schemas/flight-facts-v1.schema.json";
 
 /// Version of the flight-facts format.
-pub const VERSION: &str = "1.0";
+///
+/// 1.1 adds `integrity.time_outliers`, the `param_invalid` origin in
+/// `params_used`, and checks that return `not_applicable` for vehicles the
+/// Copter wiki rules do not cover. A 1.0 document is valid 1.1.
+pub const VERSION: &str = "1.1";
 
 /// Options for [`run`].
 #[derive(Debug, Clone)]
@@ -84,7 +88,7 @@ pub struct Threshold {
     /// Unit.
     pub unit: String,
     /// `"wiki"`, `"param"` (read from the log) or `"param_default"` (the
-    /// default the wiki states, because the log has no value).
+    /// default the wiki states, because the log has no usable value).
     pub origin: String,
 }
 
@@ -207,7 +211,12 @@ pub struct IntegrityInfo {
     pub bad_crc: u64,
     /// Rejected DataFlash formats.
     pub invalid_formats: Vec<String>,
-    /// True when nothing was skipped (a few bytes cut off at the very end are normal).
+    /// Rows whose timestamp lies outside the log's time range (isolated,
+    /// normally damaged, timestamps; see `Log::time_range_us`).
+    pub time_outliers: u64,
+    /// True when nothing was skipped, no checksum was bad and no format was
+    /// rejected (a few bytes cut off at the very end are normal). Same as
+    /// `Integrity::is_clean`.
     pub clean: bool,
 }
 
@@ -243,7 +252,7 @@ pub struct FlightFacts {
     /// Schema `$id`.
     #[serde(rename = "$schema")]
     pub schema: String,
-    /// Format version (`"1.0"`).
+    /// Format version (`"1.1"`).
     pub flight_facts_version: String,
     /// Program that made it.
     pub generator: Map<String, Value>,
@@ -316,7 +325,8 @@ pub fn run(log: &Log, opts: &Options) -> FlightFacts {
             truncated_tail_bytes: i.truncated_tail_bytes,
             bad_crc: i.bad_crc,
             invalid_formats: i.invalid_formats.clone(),
-            clean: i.skipped_bytes == 0 && i.bad_crc == 0 && i.invalid_formats.is_empty(),
+            time_outliers: log.time_outliers(),
+            clean: i.is_clean(),
         },
         armed: Armed {
             source: ctx.armed_source.into(),

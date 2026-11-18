@@ -8,6 +8,11 @@ pip install "flightlog[mcp]"       # flightlog-mcp
 
 One abi3 wheel per platform covers CPython 3.9 and later.
 
+Until `flightlog` is on PyPI, install the wheel from the GitHub release:
+`pip install flightlog --find-links https://github.com/Mattbusel/flightlog/releases/expanded_assets/v0.1.1`
+(add `"flightlog[mcp]"` or `"flightlog[polars]"` the same way).
+
+
 ## Tables
 
 ```python
@@ -21,7 +26,7 @@ log.columns("GPS")                         # [(name, arrow type, unit), ...]
 log.instance_field("IMU")                  # "I" (from FMTU), or None
 
 att = log.table("ATT")                     # pyarrow.Table
-imu1 = log.table("IMU", instance=1)        # rows of one instance
+imu1 = log.table("IMU", instance=1)        # rows of one instance (ValueError if IMU has no instance field)
 gps = log.polars("GPS")                    # polars.DataFrame
 bat = log.pandas("BAT")                    # pandas.DataFrame
 
@@ -29,11 +34,12 @@ att.schema.field("Roll").metadata          # {b"unit": b"deg"}
 att.schema.metadata[b"flightlog.format"]   # DataFlash format string
 
 log.params["FS_EKF_THRESH"]                # 0.8
-log.integrity                              # skipped bytes and regions, truncated tail, bad CRC, rejected formats
+log.integrity                              # skipped bytes and regions, truncated tail, bad CRC, rejected formats, time outliers, clean
 log.utc_offset_us                          # Unix microseconds at TimeUS 0 (from GPS time)
-log.time_range_us                          # (first, last) in the log's time base
+log.time_range_us                          # (first, last) in the log's time base, damaged timestamps left out
 
 log.to_parquet("out/")                     # one Parquet file per message type
+flightlog.parquet_file_name("ATT")         # "ATT.parquet"; the file name to_parquet uses
 ```
 
 Options: `flightlog.open(path, types=["ATT", "GPS"])` builds only those
@@ -43,6 +49,21 @@ tables (counts and parameters stay complete); `scale=False` keeps DataFlash
 `flightlog.read_table(path, "ATT")` reads one type.
 
 Reading releases the GIL, so several logs can be read in threads.
+
+`table(name, instance=k)` raises `ValueError` when the message type has no
+instance field in this log (every tlog table, and DataFlash logs without
+FMTU), instead of returning all instances mixed together. An instance value
+that does not occur gives an empty table.
+
+`to_parquet` and `flightlog export` name each file after its message type,
+and message names come from the log's own FMT records, so they are made
+safe: letters, digits, `_`, `#` and `-` are kept, anything else becomes
+`%XX` (`../X` is written as `%2E%2E%2FX.parquet`), and Windows device names
+(`CON`, `NUL`, ...) get their first letter escaped. No file is written
+outside the target directory.
+
+`flightlog.open` raises `ValueError` for a file that is neither container or
+in which not a single message decodes.
 
 ## flight-facts
 

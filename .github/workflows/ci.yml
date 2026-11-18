@@ -51,7 +51,7 @@ jobs:
       - run: bash tools/fetch_testdata.sh
       - name: Regenerate pymavlink references
         run: |
-          for f in copter-mission.bin copter-mission-truncated.bin copter-mission-zeroblock.bin copter-mission-garbage.bin copter-gps-glitch-clean.tlog; do
+          for f in copter-mission.bin copter-mission-truncated.bin copter-mission-zeroblock.bin copter-mission-garbage.bin copter-gps-glitch-clean.tlog plane-throttle-failsafe.bin; do
             python tools/pymavlink_reference.py "testdata/external/$f" > "testdata/$f.pymavlink.json"
           done
           git diff --exit-code

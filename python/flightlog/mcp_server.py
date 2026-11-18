@@ -98,6 +98,9 @@ def _clean(v: Any) -> Any:
 
 
 def _window(log: flightlog.Log, t: pa.Table, start_s: Optional[float], end_s: Optional[float]) -> pa.Table:
+    for name, v in (("start_s", start_s), ("end_s", end_s)):
+        if v is not None and not math.isfinite(v):
+            raise ValueError(f"{name} must be a finite number of seconds, got {v}")
     rng = log.time_range_us
     tc = log.time_column
     if rng is None or tc not in t.column_names or (start_s is None and end_s is None):
@@ -201,12 +204,30 @@ def get_events(store: LogStore, path: str) -> List[Dict[str, Any]]:
     return store.open(path).facts()["events"]
 
 
+def _message(e: BaseException) -> str:
+    # KeyError's str() adds quotes around the message
+    if isinstance(e, KeyError) and len(e.args) == 1 and isinstance(e.args[0], str):
+        return e.args[0]
+    return str(e)
+
+
 def build_server(store: LogStore):
     try:
         from mcp.server.mcpserver import MCPServer as Server  # mcp >= 2
+        from mcp.server.mcpserver.exceptions import ToolError
     except ImportError:  # pragma: no cover - mcp 1.x
         from mcp.server.fastmcp import FastMCP as Server
+        from mcp.server.fastmcp.exceptions import ToolError
     from mcp.types import ToolAnnotations
+
+    def run(fn, *args):
+        # The SDK hides the text of unexpected exceptions from the client; a
+        # wrong path, message or field name is the model's to correct, so it
+        # is sent as a ToolError with its message.
+        try:
+            return fn(*args)
+        except (ValueError, KeyError, OSError) as e:
+            raise ToolError(_message(e)) from e
 
     server = Server("flightlog", instructions=(
         "Read-only access to ArduPilot flight logs (.bin DataFlash and .tlog). "
@@ -218,44 +239,44 @@ def build_server(store: LogStore):
     @server.tool(name="list_logs", annotations=ro)
     def _list_logs() -> List[Dict[str, Any]]:
         """Lists .bin and .tlog files under the allowed directories."""
-        return store.list_logs()
+        return run(store.list_logs)
 
     @server.tool(name="log_overview", annotations=ro)
     def _overview(path: str) -> Dict[str, Any]:
         """Format, vehicle, firmware, duration, armed time, message counts, reader integrity and check summary of a log."""
-        return log_overview(store, path)
+        return run(log_overview, store, path)
 
     @server.tool(name="message_fields", annotations=ro)
     def _fields(path: str, message: str) -> Dict[str, Any]:
         """Columns, Arrow types and units of one message type (e.g. ATT, GPS, VIBE, XKF4 or GPS_RAW_INT)."""
-        return message_fields(store, path, message)
+        return run(message_fields, store, path, message)
 
     @server.tool(name="query_messages", annotations=ro)
     def _query(path: str, message: str, fields: Optional[List[str]] = None, start_s: Optional[float] = None,
               end_s: Optional[float] = None, instance: Optional[int] = None, max_rows: int = 200) -> Dict[str, Any]:
         """Rows of one message type between start_s and end_s (seconds from log start), evenly thinned to max_rows (at most 2000)."""
-        return query_messages(store, path, message, fields, start_s, end_s, instance, max_rows)
+        return run(query_messages, store, path, message, fields, start_s, end_s, instance, max_rows)
 
     @server.tool(name="field_stats", annotations=ro)
     def _stats(path: str, message: str, field: str, start_s: Optional[float] = None, end_s: Optional[float] = None,
               instance: Optional[int] = None) -> Dict[str, Any]:
         """min, max, mean, p05, p50 and p95 of one numeric field, optionally in a time window."""
-        return field_stats(store, path, message, field, start_s, end_s, instance)
+        return run(field_stats, store, path, message, field, start_s, end_s, instance)
 
     @server.tool(name="flight_facts", annotations=ro)
     def _facts(path: str, check: Optional[str] = None) -> Dict[str, Any]:
         """flight-facts v1: deterministic checks (vibration, clipping, EKF variance, GPS, battery, board voltage, RC and GCS failsafes), each with its ArduPilot wiki threshold, quote, measured values and time ranges. Pass check= for one check."""
-        return flight_facts(store, path, check)
+        return run(flight_facts, store, path, check)
 
     @server.tool(name="get_params", annotations=ro)
     def _params(path: str, prefix: Optional[str] = None) -> Dict[str, Any]:
         """Parameter values in the log, optionally only names starting with prefix (e.g. BATT_)."""
-        return get_params(store, path, prefix)
+        return run(get_params, store, path, prefix)
 
     @server.tool(name="get_events", annotations=ro)
     def _events(path: str) -> List[Dict[str, Any]]:
         """ERR events (decoded with the wiki's table), arming, mode changes and failsafe texts, in time order."""
-        return get_events(store, path)
+        return run(get_events, store, path)
 
     return server
 

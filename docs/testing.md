@@ -15,11 +15,11 @@ pass; the committed fixtures (`flightlog-core/tests/data/mini.bin`,
 
 ## Test logs
 
-All logs are from ArduPilot SITL, ArduCopter `V4.8.0-dev`, ardupilot commit
-`ca137a86cf2862a14b13dcddde18560094abbec4`, built with `./waf copter` and run
-with `Tools/autotest/autotest.py test.Copter.<Test>` on 2026-11-17. Each
-autotest injects one fault, which makes the logs useful for checking the
-flight-facts rules:
+All logs are from ArduPilot SITL `V4.8.0-dev`, ardupilot commit
+`ca137a86cf2862a14b13dcddde18560094abbec4`, built with `./waf copter` and
+`./waf plane` and run with `Tools/autotest/autotest.py test.Copter.<Test>`
+(or `test.Plane.<Test>`) on 2026-11-17. Each autotest injects one fault,
+which makes the logs useful for checking the flight-facts rules:
 
 | File | Autotest | What it contains |
 |---|---|---|
@@ -31,9 +31,34 @@ flight-facts rules:
 | `copter-gps-glitch.bin`, `.tlog` | `GPSGlitchLoiter` | GPS glitch |
 | `copter-motor-vibration.tlog` | `MotorVibration` | SITL console text mixed into the tlog |
 | `*-clean.tlog` | | the tlogs with the console text removed (`flightlog-core/examples/tlog_clean.rs`) |
+| `plane-throttle-failsafe.bin` | `test.Plane.ThrottleFailsafe` | ArduPlane: four radio failsafes, logged only as `MSG` text ("Throttle failsafe on") |
 
 They are attached to the `testdata-v1` GitHub release; `testdata/SHA256SUMS`
-pins them. `tools/make_damaged.py` derives four damaged copies of
+pins them.
+
+### tlogs and SIM_SPEEDUP
+
+The autotests run SITL faster than real time (`SIM_SPEEDUP` 100 in
+`copter-mission.tlog`), and a tlog records the ground station's wall clock.
+So in most corpus tlogs one recorded second covers about 100 seconds of
+flight: `copter-mission.tlog` spans 2.6 s for the flight that
+`copter-mission.bin` records as 240 s, and the tlogs other than
+`copter-gcs-failsafe.tlog` (252 s) are 1.7 s to 3.3 s long. The time-based
+tlog rules (EKF variances for 1 s, battery below `BATT_LOW_VOLT` for more
+than `BATT_LOW_TIMER`, heartbeat gaps longer than `FS_GCS_TIMEOUT`) are
+therefore tested on a tlog written in real time by
+`flightlog-core/tests/crafted.rs::tlog_time_rules_in_real_time` (a 60 s
+synthetic tlog with a 10 s heartbeat gap, a 15 s and a 3 s voltage dip, and
+a 1.5 s and a 0.5 s variance excursion, each with its expected range). The
+DataFlash logs use `TimeUS`, the simulated clock, and are not affected.
+
+### Synthetic logs
+
+`flightlog-core/tests/crafted.rs` builds small DataFlash logs in the test:
+damaged `TimeUS` and arming rows, Plane and Copter logs with and without
+their parameters, `NaN` parameters, an EKF lane that is not the primary, a
+cut-off final message, and a tlog whose first timestamp starts with the
+bytes of a DataFlash header. `tools/make_damaged.py` derives four damaged copies of
 `copter-mission.bin` with a fixed-seed generator: cut mid-message
 (`-truncated`), two 4 KiB zero runs (`-zeroblock`), 64 inverted bytes
 (`-bitflip`) and 1000 inserted bytes (`-garbage`).
@@ -47,7 +72,8 @@ of text). `flightlog-core/tests/reference.rs` computes the same from
 flightlog's tables and requires equality.
 
 Result on 2026-11-17: 19 logs, 2,686,532 messages, every count and every
-field fingerprint equal, with two documented exceptions:
+field fingerprint equal, with two documented exceptions. The Plane log added
+for 0.1.1 (30,576 messages) is equal too:
 
 - `copter-mission-bitflip.bin` has no reference: pymavlink 2.4.50 raises
   `Unsupported format char` when opening it (see [reading.md](reading.md)).
@@ -70,7 +96,9 @@ returns the same messages with the same `_elements`.
   insert) of the committed logs go through both readers, Arrow conversion and
   flight-facts without a panic; every byte of a DataFlash input is accounted
   for; every truncation of the first 4 KiB is read.
-- `python/tests` (hypothesis): random and mutated bytes through the wheel.
+- `python/tests` (hypothesis): random and mutated bytes through the wheel;
+  the flight-facts document of every case is validated against the JSON
+  Schema.
 - `fuzz/` (cargo-fuzz): the same path under libFuzzer. CI runs it for 60 s.
 
 ## Speed

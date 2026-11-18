@@ -63,7 +63,7 @@ fn fixtures_have_every_check() {
             }
         }
         let v: serde_json::Value = serde_json::from_str(&doc.to_json()).unwrap();
-        assert_eq!(v["flight_facts_version"], "1.0");
+        assert_eq!(v["flight_facts_version"], "1.1");
     }
 }
 
@@ -113,6 +113,28 @@ fn autotest_faults_are_found() {
     }
 }
 
+/// ArduPlane SITL `ThrottleFailsafe`: Plane logs its radio failsafe only as
+/// text, and the Copter-only checks do not apply.
+#[test]
+fn plane_log() {
+    let Some(p) = external("plane-throttle-failsafe.bin") else {
+        return;
+    };
+    let doc = run(&p);
+    assert_eq!(doc.log.vehicle.as_deref(), Some("plane"));
+    let rc = doc.check("rc.failsafe").unwrap();
+    assert_eq!(rc.status, Status::Fail, "{}", rc.summary);
+    assert_eq!(rc.ranges.len(), 4);
+    assert_eq!(status(&doc, "vibration.failsafe"), Status::NotApplicable);
+    // Plane logs FS_EKF_THRESH and BATT_LOW_VOLT (0: voltage trigger off)
+    assert_eq!(
+        doc.check("ekf.variance").unwrap().thresholds[0].origin,
+        "param"
+    );
+    assert_eq!(status(&doc, "battery.voltage"), Status::Info);
+    assert!(doc.events.iter().any(|e| e.text == "Throttle failsafe on"));
+}
+
 #[test]
 fn clean_mission_passes() {
     for log in ["copter-mission.bin", "copter-mission.tlog"] {
@@ -132,6 +154,51 @@ fn clean_mission_passes() {
             .as_deref()
             .unwrap()
             .starts_with("ArduCopter V4.8.0-dev"));
+    }
+}
+
+#[test]
+fn damaged_logs_keep_their_duration() {
+    let Some(clean) = external("copter-mission.bin") else {
+        return;
+    };
+    let base = run(&clean);
+    assert_eq!(base.integrity.time_outliers, 0);
+    for log in [
+        "copter-mission-bitflip.bin",
+        "copter-mission-zeroblock.bin",
+        "copter-mission-garbage.bin",
+    ] {
+        let Some(p) = external(log) else { continue };
+        let doc = run(&p);
+        let d = (doc.log.duration_s - base.log.duration_s).abs();
+        assert!(
+            d < 2.0,
+            "{log}: duration {} vs {}",
+            doc.log.duration_s,
+            base.log.duration_s
+        );
+        assert!(
+            (doc.armed.total_s - base.armed.total_s).abs() < 2.0,
+            "{log}: armed {} vs {}",
+            doc.armed.total_s,
+            base.armed.total_s
+        );
+        for c in &doc.checks {
+            for r in &c.ranges {
+                assert!(r.end_s <= doc.log.duration_s, "{log} {} {:?}", c.id, r);
+            }
+        }
+    }
+    // the bit-flipped copy has 7 rows whose TimeUS was damaged
+    if let Some(p) = external("copter-mission-bitflip.bin") {
+        let doc = run(&p);
+        assert!(doc.integrity.time_outliers > 0);
+        assert_eq!(doc.log.end_us, base.log.end_us);
+    }
+    // the truncated copy is shorter, never longer
+    if let Some(p) = external("copter-mission-truncated.bin") {
+        assert!(run(&p).log.duration_s < base.log.duration_s);
     }
 }
 

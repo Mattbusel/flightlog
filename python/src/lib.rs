@@ -142,6 +142,7 @@ impl PyLog {
         }
         d.set_item("unknown_types", unknown)?;
         d.set_item("invalid_formats", i.invalid_formats.clone())?;
+        d.set_item("time_outliers", self.inner.time_outliers())?;
         d.set_item("clean", i.is_clean())?;
         Ok(d)
     }
@@ -153,7 +154,9 @@ impl PyLog {
         self.inner.utc_offset_us
     }
 
-    /// `(first, last)` timestamp in the log's time base, or None.
+    /// `(first, last)` timestamp in the log's time base, or None. Isolated
+    /// (damaged) timestamps are left out; `integrity["time_outliers"]`
+    /// counts them.
     #[getter]
     fn time_range_us(&self) -> Option<(u64, u64)> {
         self.inner.time_range_us()
@@ -186,10 +189,16 @@ impl PyLog {
     }
 
     /// One message type as a `pyarrow.Table`. With `instance`, only rows of
-    /// that instance (for message types with an instance field).
+    /// that instance; raises `ValueError` when the message type has no
+    /// instance field (see `instance_field()`).
     #[pyo3(signature = (name, instance=None))]
     fn table(&self, py: Python<'_>, name: &str, instance: Option<i64>) -> PyResult<Py<PyAny>> {
         let t = self.get(name)?;
+        if instance.is_some() && t.instance_field.is_none() {
+            return Err(PyValueError::new_err(format!(
+                "{name} has no instance field in this log, so instance= cannot select rows; call table({name:?}) without instance="
+            )));
+        }
         let batch = py
             .detach(|| match instance {
                 Some(i) => t.instance(i).into_record_batch(),

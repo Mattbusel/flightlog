@@ -42,6 +42,19 @@ fn exercise(bytes: &[u8]) {
     for log in [&df, &tl] {
         let doc = facts::run(log, &facts::Options::default());
         let _ = doc.to_json();
+        // what the schema requires of numbers the checks produce
+        for c in &doc.checks {
+            for t in &c.thresholds {
+                assert!(t.value.is_finite(), "{} {}", c.id, t.name);
+            }
+            for r in &c.ranges {
+                assert!(r.start_s.is_finite() && r.end_s.is_finite(), "{}", c.id);
+            }
+        }
+        assert!(doc.log.duration_s.is_finite() && doc.log.duration_s >= 0.0);
+        if let Some((lo, hi)) = log.time_range_us() {
+            assert!(lo <= hi);
+        }
         #[cfg(feature = "arrow")]
         for t in log.tables() {
             let b = t.to_record_batch().unwrap();

@@ -10,6 +10,10 @@ pip install "flightlog[mcp]"
 flightlog-mcp --root /path/to/logs [--root /other/dir] [--max-bytes N]
 ```
 
+Until `flightlog` is on PyPI, install the wheel from the GitHub release:
+`pip install flightlog --find-links https://github.com/Mattbusel/flightlog/releases/expanded_assets/v0.1.1`
+(add `"flightlog[mcp]"` or `"flightlog[polars]"` the same way).
+
 Transport is stdio. Only files under the `--root` directories can be read
 (default: `FLIGHTLOG_MCP_ROOTS`, separated by the OS path separator, or the
 current directory). Paths are resolved before the check, so `..` and links
@@ -57,6 +61,13 @@ scale as `start_s` / `end_s` in flight-facts ranges, so a finding's range can
 be passed straight to `query_messages`.
 
 Relative paths are taken relative to the first root.
+
+Errors the caller can fix (a path outside the roots, an unknown message
+type, field or check, `instance` on a message type without instances) come
+back as tool errors with their message, for example "no NOPE messages in
+this log" or "PARM has no field(s) ['Nope']; fields: [...]", so the
+assistant can correct the call. They are raised as the SDK's `ToolError`
+(mcp 1.x and 2.x); other exceptions stay hidden from the client.
 
 ## Example session
 

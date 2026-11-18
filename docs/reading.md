@@ -11,7 +11,11 @@
 | Parameters (`Log::params`) | PARM | PARAM_VALUE |
 
 The container is detected from the content (`LogKind::detect`), not the file
-name.
+name: a tlog when byte 8 starts a MAVLink frame whose checksum verifies, a
+DataFlash log when the file starts with `0xA3 0x95 0x80` (a FMT message).
+Damaged starts fall back to counting DataFlash headers and tlog records in
+the first 64 KiB. `Log::read` returns `UnknownFormat` when nothing matches or
+when not a single message decodes.
 
 ## Values
 
@@ -87,6 +91,27 @@ frames with the same values.
 from the first `GPS` message with a week number, using pymavlink's rule (GPS
 epoch 1980-01-06, 18 leap seconds). `Log::time_range_us` ignores `TimeUS == 0`
 rows written before the clock starts.
+
+A damaged log can contain rows whose timestamp is garbage: in
+`copter-mission-bitflip.bin` one `PIDA` row decodes with `TimeUS`
+18374686479875762825 (microseconds), which would make the log more than
+500,000 years long.
+`Log::time_range_us` therefore takes the first and last timestamp that has
+two other timestamps within 2 s (`TIME_NEIGHBOUR_US`) and is in order with
+the rows before and after it in its own table (within the same 2 s). Rows
+outside that range are counted in `Log::time_outliers` (6 in the bit-flipped
+copy, 0 in every undamaged test log) and flight-facts leaves them out of
+every check, event and armed range. A log too sparse for the rule (no
+timestamp has two neighbours within 2 s) uses the plain minimum and maximum.
+
+## Integrity
+
+`Integrity::is_clean` (and flight-facts `integrity.clean`, the same
+definition) is true when nothing was skipped, no tlog checksum was bad and no
+DataFlash format was rejected. A few bytes at the very end that do not form a
+whole message (`truncated_tail_bytes`) do not count: the logger stopping in
+the middle of its last write is normal, and every undamaged SITL `.bin` in
+the test corpus ends that way.
 
 ## Selecting types and replaying
 

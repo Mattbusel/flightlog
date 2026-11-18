@@ -24,13 +24,13 @@ autotest `CopterMission`, see [testing.md](testing.md)).
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/Mattbusel/flightlog/main/flightlog-core/schemas/flight-facts-v1.schema.json",
-  "flight_facts_version": "1.0",
-  "generator": {"name": "flightlog", "version": "0.1.0"},
+  "flight_facts_version": "1.1",
+  "generator": {"name": "flightlog", "version": "0.1.1"},
   "log": {"kind": "dataflash", "vehicle": "copter", "firmware": "ArduCopter V4.8.0-dev (ca137a86)",
           "time_base": "boot_us", "start_us": 2459849, "end_us": 242639572, "duration_s": 240.18,
           "utc_start": "2026-11-17T22:06:24.260Z", "message_types": 74, "messages": 134976},
   "integrity": {"bytes": 5595136, "skipped_bytes": 0, "skipped_regions": 0, "truncated_tail_bytes": 6,
-                "bad_crc": 0, "invalid_formats": [], "clean": true},
+                "bad_crc": 0, "invalid_formats": [], "time_outliers": 0, "clean": true},
   "armed": {"source": "ARM.ArmState", "total_s": 195.73, "ranges": [...]},
   "params_used": {"FS_EKF_THRESH": {"value": 0.8, "origin": "param"}, ...},
   "summary": {"pass": 10, "info": 0, "warn": 1, "fail": 0, "not_applicable": 1},
@@ -59,7 +59,38 @@ a plot wants.
 Status values: `pass` (within the wiki's thresholds), `info` (worth knowing,
 still within what the wiki calls acceptable), `warn` (the wiki says it may be
 a problem), `fail` (the wiki says it is a problem, or the firmware logged the
-failsafe), `not_applicable` (the log lacks the data).
+failsafe), `not_applicable` (the log lacks the data, or the rule does not
+cover this vehicle).
+
+Rows whose timestamp is damaged (outside the log's time range, counted in
+`integrity.time_outliers`; see [reading.md](reading.md#time)) are left out
+of every check, event and armed range.
+
+## Vehicles
+
+The wiki pages the thresholds come from are the Copter pages
+(`ardupilot.org/copter/docs/...`); several are common pages that every
+vehicle's wiki publishes (vibration, log diagnosis, EKF failsafe). The checks
+use `log.vehicle` (DataFlash `VER.BU` or the firmware string; tlog
+`HEARTBEAT.type`) as follows:
+
+- Copter and Heli logs get every rule, including the Copter wiki defaults
+  (`FS_EKF_THRESH` 0.8, `BATT_LOW_VOLT` 10.5 V, `FS_GCS_TIMEOUT` 5 s,
+  `RC_FS_TIMEOUT` 1 s) when the log has no value for the parameter.
+- Other vehicles (Plane, Rover, Sub, Blimp, Tracker) never get a Copter
+  default. A rule that needs a parameter uses the log's own value, which
+  Plane, for example, logs for `FS_EKF_THRESH`, `BATT_LOW_VOLT` and
+  `RC_FS_TIMEOUT`; without it the check is `not_applicable` and says why.
+  `vibration.failsafe` is `not_applicable` for them: it is a Copter feature.
+- When the vehicle is not identified, the defaults are not used either.
+
+A parameter whose logged value is not a finite number (a damaged PARM row)
+is treated as missing: `params_used` records it with `"value": null,
+"origin": "param_invalid"`, and the check uses the Copter default if it may,
+else none.
+
+The test corpus has one Plane log (`plane-throttle-failsafe.bin`, ArduPlane
+SITL `ThrottleFailsafe`); see [testing.md](testing.md).
 
 "While armed" means inside the armed ranges (DataFlash `ARM.ArmState`, or
 `EV` ids 10/11 on older logs; tlog: the vehicle's `HEARTBEAT.base_mode`
@@ -108,23 +139,31 @@ Wiki (vibration-failsafe): "The vibration failsafe will trigger if all of the
 following are true for at least one second:" ...
 
 Rule: `warn` if it was active, with its ranges; else `pass`.
+`not_applicable` for vehicles other than Copter and Heli.
 
 ### ekf.variance
 
-Data: `XKF4` (EKF3) or `NKF4` (EKF2) `SV`, `SP`, `SM` per core `C`, while
-armed (tlog: `EKF_STATUS_REPORT` velocity, horizontal position and compass
-variances), and `ERR` subsystems 16 (EKF Check) and 17 (EKF Failsafe).
+Data: `XKF4` (EKF3) or `NKF4` (EKF2) `SV`, `SP`, `SM` per core `C`, and
+`PI` (the primary core index) when logged, while armed (tlog:
+`EKF_STATUS_REPORT` velocity, horizontal position and compass variances,
+which are the primary core's), and `ERR` subsystems 16 (EKF Check) and 17
+(EKF Failsafe).
 
 Wiki (common-ekf-inav-failsafe): "The EKF failsafe will trigger when any two
 of the EKF "variances" for compass, position or velocity are higher than the
 FS_EKF_THRESH parameter value for 1 second." The threshold is the log's
 `FS_EKF_THRESH`; if missing or 0 (failsafe disabled), the 0.8 the wiki quotes
-is used and marked `param_default`.
+is used and marked `param_default` (Copter and Heli logs only, see
+[Vehicles](#vehicles)).
 
 Rule: `fail` if `ERR` 17 code 1 was logged (or the tlog text "EKF Failsafe"),
-or two or more variances stayed above the threshold together for 1 s or
-longer on any core; `warn` if one variance did (or `ERR` 16 code 2); else
-`pass`.
+or two or more variances of the primary core stayed above the threshold
+together for 1 s or longer (the failsafe reads the primary core: rows where
+`C == PI`, or core 0 when `PI` is not logged); `warn` if a core that was not
+the primary did, if one variance did (or `ERR` 16 code 2); else `pass`.
+Without a threshold (another vehicle, no `FS_EKF_THRESH` in the log):
+`not_applicable` unless the failsafe was logged, with the maximum variances
+still in `measured`.
 
 ### gps.hdop and gps.satellites
 
@@ -162,9 +201,13 @@ voltage or a sag corrected voltage is used".
 
 Rule: the compared voltage is `Volt`, or `VoltR` when `BATT_FS_VOLTSRC = 1`.
 `fail` if `ERR` 6 logged a battery failsafe, or the voltage stayed below
-`BATT_LOW_VOLT` or `BATT_CRT_VOLT` for longer than `BATT_LOW_TIMER`; `warn` if
-it dipped below `BATT_LOW_VOLT` for less; `info` if the voltage trigger is
-disabled (`BATT_LOW_VOLT = 0`); else `pass`. Measured: minimum voltage, and
+`BATT_LOW_VOLT` or `BATT_CRT_VOLT` for longer than `BATT_LOW_TIMER`; `warn`
+instead of `fail` when `BATT_LOW_VOLT` is the Copter default because the log
+has none (the vehicle's own threshold is unknown, for example on a 2S
+battery); `warn` if it dipped below `BATT_LOW_VOLT` for less; `info` if the
+voltage trigger is disabled (`BATT_LOW_VOLT = 0`); `not_applicable` when
+there is no threshold (not Copter or Heli, no `BATT_LOW_VOLT` in the log) and
+no failsafe was logged; else `pass`. Measured: minimum voltage, and
 the largest sag (`VoltR - Volt`).
 
 ### power.board_vcc
@@ -191,16 +234,20 @@ recording); else `pass`.
 
 Data: `ERR` subsystem 5 (Radio Failsafe) code 1 to 0, and subsystem 2
 (Radio) code 2 "Late Frame : no updates received from receiver for two
-seconds". tlog: `STATUSTEXT` "Radio Failsafe..." to "Radio Failsafe Cleared".
+seconds". Plane and Rover do not log `ERR` for it, so when a DataFlash log
+has no such `ERR` the `MSG` texts are read, like the tlog `STATUSTEXT`:
+"Radio Failsafe..." to "Radio Failsafe Cleared" (Copter, Rover), "Throttle
+failsafe on" to "Throttle failsafe off" (Plane).
 
 Rule: `fail` for a radio failsafe; `warn` for late frames without one; else
 `pass`. `RC_FS_TIMEOUT` is reported.
 
 ### link.gcs_failsafe
 
-Data: `ERR` subsystem 8 code 1 to 0. tlog: `STATUSTEXT` "GCS Failsafe" to
-"GCS Failsafe Cleared", plus gaps in the vehicle's `HEARTBEAT` stream longer
-than `FS_GCS_TIMEOUT` (default 5 s per the wiki) while armed.
+Data: `ERR` subsystem 8 code 1 to 0; without it, the texts "GCS Failsafe"
+to "GCS Failsafe Cleared" (DataFlash `MSG`, tlog `STATUSTEXT`). tlog also:
+gaps in the vehicle's `HEARTBEAT` stream longer than `FS_GCS_TIMEOUT`
+(default 5 s per the Copter wiki, for Copter and Heli logs) while armed.
 
 Rule: `fail` for a logged GCS failsafe; tlog `warn` for heartbeat gaps;
 else `pass`.
@@ -208,12 +255,19 @@ else `pass`.
 ## Events
 
 `events` lists, in time order: `ERR` rows decoded with the wiki's subsystem
-and code table, `armed` / `disarmed`, flight mode changes (repeats of the same
-mode are dropped; names from pymavlink's mode tables for Copter, Plane and
-Rover), and for tlogs the failsafe `STATUSTEXT` lines.
+and code table, `armed` / `disarmed` (no `disarmed` when the log ends armed),
+flight mode changes (repeats of the same mode are dropped; names from
+pymavlink's mode tables for Copter, Plane and Rover), and the failsafe text
+lines (`MSG` in DataFlash logs, `STATUSTEXT` in tlogs).
 
 ## Versioning
 
 `flight_facts_version` is `MAJOR.MINOR`. A minor version may add checks,
 fields or event kinds; consumers must ignore what they do not know. Changing
 the meaning of an existing check id or field is a major version.
+
+- 1.1 (flightlog 0.1.1): `integrity.time_outliers`; `param_invalid` origin in
+  `params_used`; `not_applicable` for rules the Copter wiki does not give the
+  vehicle; the EKF failsafe rule on the primary core; `integrity.clean`
+  documented as the same definition as the reader's. A 1.0 document is valid
+  against the 1.1 schema.

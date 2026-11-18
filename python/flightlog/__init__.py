@@ -18,12 +18,13 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from typing import Any, Dict, Iterable, Optional
 
 from ._flightlog import FACTS_VERSION, __version__, detect, facts_schema
 from ._flightlog import Log as _Log
 
-__all__ = ["Log", "open", "from_bytes", "read_table", "detect", "facts_schema", "FACTS_VERSION", "__version__"]
+__all__ = ["Log", "open", "from_bytes", "read_table", "detect", "facts_schema", "parquet_file_name", "FACTS_VERSION", "__version__"]
 
 
 class Log(_Log):
@@ -57,16 +58,53 @@ class Log(_Log):
         return json.loads(self.facts_json(vibe_percentile=vibe_percentile, events=events))
 
     def to_parquet(self, directory: str, names: Optional[Iterable[str]] = None) -> Dict[str, str]:
-        """Writes one Parquet file per message type; returns ``{name: path}``."""
+        """Writes one Parquet file per message type; returns ``{name: path}``.
+
+        Message names come from the log itself, so each becomes a safe file
+        name (see ``parquet_file_name``) and every file stays inside
+        ``directory``.
+        """
         import pyarrow.parquet as pq
 
         os.makedirs(directory, exist_ok=True)
+        root = os.path.realpath(directory)
         out = {}
+        used = set()
         for n in names if names is not None else self.message_types:
-            p = os.path.join(directory, f"{n}.parquet")
+            fname = parquet_file_name(n)
+            if fname.lower() in used:
+                raise ValueError(f"two message names map to the file name {fname}")
+            used.add(fname.lower())
+            p = os.path.join(root, fname)
+            if os.path.dirname(os.path.realpath(p)) != root:
+                raise ValueError(f"message name {n!r} does not map to a file inside {directory}")
             pq.write_table(self.table(n), p)
             out[n] = p
         return out
+
+
+_SAFE = re.compile(r"[A-Za-z0-9_#-]")
+
+
+def parquet_file_name(name: str) -> str:
+    """The Parquet file name ``to_parquet`` uses for a message name.
+
+    Letters, digits, ``_``, ``#`` and ``-`` are kept; every other character
+    (including ``.``, ``/``, ``\\`` and ``:``) becomes ``%XX`` (its UTF-8
+    bytes in hex), so a name from a crafted log cannot leave the directory.
+    """
+    safe = "".join(c if _SAFE.fullmatch(c) else _hex(c) for c in name)
+    if safe.upper() in _RESERVED:
+        # Windows device names (CON, NUL, COM1, ...) are not usable as files
+        safe = _hex(safe[0]) + safe[1:]
+    return f"{safe or '%'}.parquet"
+
+
+def _hex(c: str) -> str:
+    return "".join(f"%{b:02X}" for b in c.encode())
+
+
+_RESERVED = {"CON", "PRN", "AUX", "NUL"} | {f"{p}{i}" for p in ("COM", "LPT") for i in range(10)}
 
 
 def from_bytes(data, types: Optional[Iterable[str]] = None, scale: bool = True, keep_order: bool = False) -> Log:

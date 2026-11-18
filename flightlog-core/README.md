@@ -30,6 +30,10 @@ let roll = log.table("ATT").unwrap().f64s("Roll").unwrap();
 let doc = facts::run(&log, &facts::Options::default());
 ```
 
+Install: `cargo add flightlog-core`; Python: `pip install flightlog`.
+Until `flightlog` is on PyPI, install the wheel from the GitHub release:
+`pip install flightlog --find-links https://github.com/Mattbusel/flightlog/releases/expanded_assets/v0.1.1`.
+
 Docs: [reading](https://github.com/Mattbusel/flightlog/blob/main/docs/reading.md) · [flight-facts](https://github.com/Mattbusel/flightlog/blob/main/docs/flight-facts.md) ·
 [Python](https://github.com/Mattbusel/flightlog/blob/main/docs/python.md) · [MCP server](https://github.com/Mattbusel/flightlog/blob/main/docs/mcp.md) · [testing](https://github.com/Mattbusel/flightlog/blob/main/docs/testing.md)
 

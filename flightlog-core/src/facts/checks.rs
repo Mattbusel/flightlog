@@ -17,22 +17,62 @@ pub(crate) struct Ctx<'a> {
     pub end_us: u64,
     pub armed: Vec<(u64, u64)>,
     pub armed_source: &'static str,
+    /// The last armed range has no disarm before the log ends.
+    pub ends_armed: bool,
     pub params_used: RefCell<Map<String, Value>>,
+    /// `copter`, `plane`, ... when known.
+    pub veh: Option<String>,
 }
 
 impl<'a> Ctx<'a> {
     pub fn new(log: &'a Log, opts: &'a Options) -> Self {
         let (start_us, end_us) = log.time_range_us().unwrap_or((0, 0));
-        let (armed, armed_source) = armed_ranges(log, end_us);
-        Ctx {
+        let (armed, armed_source, ends_armed) = armed_ranges(log, start_us, end_us);
+        let mut ctx = Ctx {
             log,
             opts,
             start_us,
             end_us,
             armed,
             armed_source,
+            ends_armed,
             params_used: RefCell::new(Map::new()),
+            veh: None,
+        };
+        ctx.veh = ctx.vehicle();
+        ctx
+    }
+
+    /// True for Copter and Heli logs: the vehicles the Copter wiki pages
+    /// (and their parameter defaults) describe.
+    pub fn is_copter(&self) -> bool {
+        matches!(self.veh.as_deref(), Some("copter" | "heli"))
+    }
+
+    /// The vehicle is known and is not a Copter or Heli.
+    fn known_non_copter(&self) -> Option<&str> {
+        match self.veh.as_deref() {
+            Some("copter" | "heli") | None => None,
+            Some(v) => Some(v),
         }
+    }
+
+    /// A Copter wiki default: only for Copter and Heli logs.
+    fn copter_default(&self, v: f64) -> Option<f64> {
+        self.is_copter().then_some(v)
+    }
+
+    /// "this plane log", "this log" (vehicle unknown).
+    fn this_log(&self) -> String {
+        match self.veh.as_deref() {
+            Some(v) => format!("this {v} log"),
+            None => "this log (vehicle not identified)".into(),
+        }
+    }
+
+    /// Inside the log's time range (timestamps outside it are damaged).
+    fn in_log(&self, t: u64) -> bool {
+        t >= self.start_us && t <= self.end_us
     }
 
     pub fn range(&self, s: u64, e: u64, detail: impl Into<String>) -> Range {
@@ -54,16 +94,20 @@ impl<'a> Ctx<'a> {
         }
     }
 
+    /// A parameter from the log, or `default` when the log has none or its
+    /// value is not a finite number (recorded as `param_invalid`).
     fn param(&self, name: &str, default: Option<f64>) -> Option<(f64, &'static str)> {
-        let v = match self.log.param(name) {
-            Some(v) => Some((v, "param")),
-            None => default.map(|d| (d, "param_default")),
+        let logged = self.log.param(name);
+        let v = match logged {
+            Some(v) if v.is_finite() => Some((v, "param")),
+            _ => default.map(|d| (d, "param_default")),
         };
-        if let Some((val, origin)) = v {
-            self.params_used
-                .borrow_mut()
-                .insert(name.into(), json!({ "value": num(val), "origin": origin }));
-        }
+        let entry = match (logged, v) {
+            (Some(x), _) if !x.is_finite() => json!({ "value": null, "origin": "param_invalid" }),
+            (_, Some((val, origin))) => json!({ "value": num(val), "origin": origin }),
+            _ => return None,
+        };
+        self.params_used.borrow_mut().insert(name.into(), entry);
         v
     }
 
@@ -163,6 +207,7 @@ impl<'a> Ctx<'a> {
 
     pub fn log_info(&self) -> LogInfo {
         let range = self.log.time_range_us();
+        let vehicle = self.veh.clone();
         let utc = match (self.log.kind, self.log.utc_offset_us, range) {
             (LogKind::DataFlash, Some(off), Some((s, _))) => Some(super::iso8601(off + s as i64)),
             (LogKind::Tlog, _, Some((s, _))) => Some(super::iso8601(s as i64)),
@@ -170,7 +215,7 @@ impl<'a> Ctx<'a> {
         };
         LogInfo {
             kind: super::kind_name(self.log.kind).into(),
-            vehicle: self.vehicle(),
+            vehicle,
             firmware: self.firmware(),
             time_base: match self.log.kind {
                 LogKind::DataFlash => "boot_us".into(),
@@ -203,11 +248,24 @@ impl<'a> Ctx<'a> {
                     c.data.get_i64(i)?,
                 ))
             })
+            .filter(|r| self.in_log(r.0))
             .collect()
     }
 
-    /// tlog STATUSTEXT rows from the vehicle.
+    /// Text messages from the vehicle: tlog STATUSTEXT, DataFlash MSG.
     fn texts(&self) -> Vec<(u64, String)> {
+        if self.log.kind == LogKind::DataFlash {
+            let Some(t) = self.table("MSG") else {
+                return Vec::new();
+            };
+            let (Some(tc), Some(x)) = (t.column("TimeUS"), t.column("Message")) else {
+                return Vec::new();
+            };
+            return (0..t.len())
+                .filter_map(|i| Some((tc.data.get_f64(i)? as u64, x.data.get_str(i)?.to_string())))
+                .filter(|r| self.in_log(r.0))
+                .collect();
+        }
         let Some(t) = self.table("STATUSTEXT") else {
             return Vec::new();
         };
@@ -222,6 +280,7 @@ impl<'a> Ctx<'a> {
         (0..t.len())
             .filter(|&i| sys.is_none() || sid.data.get_i64(i) == sys)
             .filter_map(|i| Some((tc.data.get_f64(i)? as u64, x.data.get_str(i)?.to_string())))
+            .filter(|r| self.in_log(r.0))
             .collect()
     }
 
@@ -295,10 +354,13 @@ impl<'a> Ctx<'a> {
                     let tc = m.column("TimeUS");
                     let mc = m.column("ModeNum").or_else(|| m.column("Mode"));
                     if let (Some(tc), Some(mc)) = (tc, mc) {
-                        let veh = self.vehicle();
+                        let veh = self.veh.clone();
                         let mut last: Option<i64> = None;
                         for i in 0..m.len() {
                             if let (Some(t), Some(n)) = (tc.data.get_f64(i), mc.data.get_i64(i)) {
+                                if !self.in_log(t as u64) {
+                                    continue;
+                                }
                                 // MODE is logged again on re-entry and at log start: keep changes only
                                 if last == Some(n) {
                                     continue;
@@ -312,6 +374,12 @@ impl<'a> Ctx<'a> {
                         }
                     }
                 }
+                // Plane and Rover report some failsafes only as text
+                for (t, x) in self.texts() {
+                    if is_failsafe_text(&x) {
+                        ev.push(mk(t, "text", x, None, None));
+                    }
+                }
             }
             LogKind::Tlog => {
                 for (t, x) in self.texts() {
@@ -321,9 +389,9 @@ impl<'a> Ctx<'a> {
                 }
             }
         }
-        for &(s, e) in &self.armed {
+        for (i, &(s, e)) in self.armed.iter().enumerate() {
             ev.push(mk(s, "armed", "armed".into(), None, None));
-            if e < self.end_us || self.log.kind == LogKind::Tlog {
+            if !(self.ends_armed && i + 1 == self.armed.len()) {
                 ev.push(mk(e, "disarmed", "disarmed".into(), None, None));
             }
         }
@@ -334,6 +402,7 @@ impl<'a> Ctx<'a> {
 
 fn is_failsafe_text(x: &str) -> bool {
     x.contains("Failsafe")
+        || x.starts_with("Throttle failsafe")
         || x.starts_with("EKF variance")
         || x.starts_with("Vibration compensation")
         || x.starts_with("GPS Glitch")
@@ -630,6 +699,15 @@ fn vibration_clipping(ctx: &Ctx) -> Check {
 
 fn vibration_failsafe(ctx: &Ctx) -> Check {
     const ID: &str = "vibration.failsafe";
+    if let Some(v) = ctx.known_non_copter() {
+        let mut c = check(
+            ID,
+            Status::NotApplicable,
+            format!("The vibration failsafe is a Copter feature; this log is from a {v}."),
+        );
+        c.sources = src(&[wiki::VIBE_FAILSAFE]);
+        return c;
+    }
     let ranges: Vec<(u64, u64, String)> = match ctx.log.kind {
         LogKind::DataFlash => {
             if ctx.log.counts.is_empty() {
@@ -681,21 +759,22 @@ fn vibration_failsafe(ctx: &Ctx) -> Check {
     c
 }
 
+/// One EKF core: label, velocity, position and compass variances, and per
+/// sample whether this core was the primary one.
+type Core = (String, Series, Series, Series, Vec<bool>);
+
 #[allow(clippy::needless_late_init)]
 fn ekf_variance(ctx: &Ctx) -> Check {
     const ID: &str = "ekf.variance";
     let log = ctx.log;
-    let thresh = ctx.param("FS_EKF_THRESH", Some(0.8));
-    let (limit, origin) = thresh.unwrap_or((0.8, "param_default"));
-    // wiki: FS_EKF_THRESH = 0 disables the failsafe; still compare with the default
-    let (limit, origin) = if limit <= 0.0 {
-        (0.8, "param_default")
-    } else {
-        (limit, origin)
+    // FS_EKF_THRESH from the log; the Copter wiki's 0.8 only for Copter logs.
+    // wiki: FS_EKF_THRESH = 0 disables the failsafe; still compare with 0.8.
+    let limit = match ctx.param("FS_EKF_THRESH", ctx.copter_default(0.8)) {
+        Some((v, _)) if v <= 0.0 => ctx.copter_default(0.8).map(|d| (d, "param_default")),
+        other => other,
     };
     let flight = ctx.flight();
-    // (label, velocity, position, compass)
-    let mut cores: Vec<(String, Series, Series, Series)> = Vec::new();
+    let mut cores: Vec<Core> = Vec::new();
     let evidence: Vec<String>;
     match log.kind {
         LogKind::DataFlash => {
@@ -709,31 +788,53 @@ fn ekf_variance(ctx: &Ctx) -> Check {
             } else {
                 vec![0]
             };
+            // the core the failsafe reads: PI (primary index) when logged, else core 0
+            let first = insts.iter().copied().min().unwrap_or(0);
             for inst in insts {
                 let rows = instance_rows(t, "C", inst);
-                let s = |f: &str| Series::from_table(log, t, f, Some(&rows));
+                let s =
+                    |f: &str| Series::from_table(log, t, f, Some(&rows)).map(|s| s.within(&flight));
                 if let (Some(v), Some(p), Some(m)) = (s("SV"), s("SP"), s("SM")) {
-                    cores.push((format!("core{inst}"), v, p, m));
+                    let primary: Vec<bool> = match s("PI") {
+                        Some(pi) if pi.len() == v.len() => {
+                            pi.v.iter().map(|&x| x as i64 == inst).collect()
+                        }
+                        _ => vec![inst == first; v.len()],
+                    };
+                    cores.push((format!("core{inst}"), v, p, m, primary));
                 }
             }
-            evidence = vec![
+            let mut e = vec![
                 format!("{name}.SV"),
                 format!("{name}.SP"),
                 format!("{name}.SM"),
-                "ERR.Subsys=16,17".into(),
             ];
+            if t.column("PI").is_some() {
+                e.push(format!("{name}.PI"));
+            }
+            e.push("ERR.Subsys=16,17".into());
+            evidence = e;
         }
         LogKind::Tlog => {
             let Some(t) = ctx.table("EKF_STATUS_REPORT") else {
                 return na(ID, "EKF_STATUS_REPORT", &[wiki::EKF_FAILSAFE]);
             };
-            let s = |f: &str| Series::from_table(log, t, f, None);
+            let sys = vehicle_sys_id(log);
+            let rows: Vec<usize> = match (sys, t.column("sys_id")) {
+                (Some(s), Some(c)) => (0..t.len())
+                    .filter(|&i| c.data.get_i64(i) == Some(s))
+                    .collect(),
+                _ => (0..t.len()).collect(),
+            };
+            let s = |f: &str| Series::from_table(log, t, f, Some(&rows)).map(|s| s.within(&flight));
             if let (Some(v), Some(p), Some(m)) = (
                 s("velocity_variance"),
                 s("pos_horiz_variance"),
                 s("compass_variance"),
             ) {
-                cores.push(("primary".into(), v, p, m));
+                // EKF_STATUS_REPORT carries the primary core's variances
+                let n = v.len();
+                cores.push(("primary".into(), v, p, m, vec![true; n]));
             }
             evidence = vec![
                 "EKF_STATUS_REPORT.velocity_variance".into(),
@@ -748,33 +849,54 @@ fn ekf_variance(ctx: &Ctx) -> Check {
     let mut measured = Map::new();
     let mut ranges = Vec::new();
     let mut two_over = false;
+    let mut two_over_other = false;
     let mut one_over = false;
-    for (label, v, p, m) in &cores {
-        let (v, p, m) = (v.within(&flight), p.within(&flight), m.within(&flight));
+    for (label, v, p, m, primary) in &cores {
         measured.insert(
             label.clone(),
             json!({ "velocity_max": opt(v.max()), "position_max": opt(p.max()), "compass_max": opt(m.max()) }),
         );
+        let Some((limit, _)) = limit else { continue };
         // count of variances over the limit at each velocity sample time
         let n = v.len().min(p.len()).min(m.len());
+        let count = |i: usize| {
+            [v.v[i], p.v[i], m.v[i]]
+                .iter()
+                .filter(|&&x| x > limit)
+                .count() as f64
+        };
         let over = Series {
             t: v.t[..n].to_vec(),
+            v: (0..n).map(count).collect(),
+        };
+        // the failsafe rule, on samples where this core was the primary
+        let over_primary = Series {
+            t: v.t[..n].to_vec(),
             v: (0..n)
-                .map(|i| {
-                    [v.v[i], p.v[i], m.v[i]]
-                        .iter()
-                        .filter(|&&x| x > limit)
-                        .count() as f64
-                })
+                .map(|i| if primary[i] { count(i) } else { 0.0 })
                 .collect(),
         };
-        for (a, b) in over.runs(|c| c >= 2.0, 0) {
+        let mut two_here = Vec::new();
+        for (a, b) in over_primary.runs(|c| c >= 2.0, 0) {
             if b - a >= 1_000_000 {
                 two_over = true;
+                two_here.push((a, b));
                 ranges.push(ctx.range(
                     a,
                     b,
-                    format!("{label}: two or more variances above {limit} for 1 s or longer"),
+                    format!(
+                        "{label} (primary): two or more variances above {limit} for 1 s or longer"
+                    ),
+                ));
+            }
+        }
+        for (a, b) in over.runs(|c| c >= 2.0, 0) {
+            if b - a >= 1_000_000 && !two_here.iter().any(|&(x, y)| x <= b && a <= y) {
+                two_over_other = true;
+                ranges.push(ctx.range(
+                    a,
+                    b,
+                    format!("{label} (not the primary core): two or more variances above {limit} for 1 s or longer"),
                 ));
             }
         }
@@ -824,27 +946,49 @@ fn ekf_variance(ctx: &Ctx) -> Check {
                 fs_err.len() + texts.len()
             ),
         )
-    } else if two_over {
-        (Status::Fail, format!("Two or more EKF variances stayed above FS_EKF_THRESH {limit} for 1 s or longer, the wiki's EKF failsafe condition."))
-    } else if !check_err.is_empty() || one_over {
-        (Status::Warn, format!("An EKF variance stayed above FS_EKF_THRESH {limit} for 1 s or longer (one variance alone does not trigger the failsafe)."))
+    } else if let Some((limit, _)) = limit {
+        if two_over {
+            (Status::Fail, format!("Two or more variances of the primary EKF core stayed above FS_EKF_THRESH {limit} for 1 s or longer, the wiki's EKF failsafe condition."))
+        } else if two_over_other {
+            (Status::Warn, format!("Two or more variances of an EKF core that was not the primary stayed above FS_EKF_THRESH {limit} for 1 s or longer (the failsafe reads the primary core)."))
+        } else if !check_err.is_empty() || one_over {
+            (Status::Warn, format!("An EKF variance stayed above FS_EKF_THRESH {limit} for 1 s or longer (one variance alone does not trigger the failsafe)."))
+        } else {
+            (
+                Status::Pass,
+                format!("EKF variances stayed below FS_EKF_THRESH {limit}."),
+            )
+        }
     } else {
         (
-            Status::Pass,
-            format!("EKF variances stayed below FS_EKF_THRESH {limit}."),
+            Status::NotApplicable,
+            format!(
+                "{} has no FS_EKF_THRESH and the wiki's EKF failsafe rule and its 0.8 default are documented for Copter, so variances are reported without a verdict.",
+                capitalize(&ctx.this_log())
+            ),
         )
     };
     ranges.sort_by_key(|r| r.start_us);
     let mut c = check(ID, status, summary);
-    c.thresholds = vec![
-        th("FS_EKF_THRESH", limit, "", origin),
-        th("duration", 1.0, "s", "wiki"),
-    ];
+    if let Some((limit, origin)) = limit {
+        c.thresholds = vec![
+            th("FS_EKF_THRESH", limit, "", origin),
+            th("duration", 1.0, "s", "wiki"),
+        ];
+    }
     c.measured = measured;
     c.ranges = ranges;
     c.evidence = evidence;
     c.sources = src(&[wiki::EKF_FAILSAFE, wiki::EKF_DEFAULT, wiki::ERR_TABLE]);
     c
+}
+
+fn capitalize(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+        None => String::new(),
+    }
 }
 
 /// GPS samples with a 3D fix while flying, primary receiver: (hdop, nsats).
@@ -1022,11 +1166,12 @@ fn battery_voltage(ctx: &Ctx) -> Check {
     const ID: &str = "battery.voltage";
     let log = ctx.log;
     let flight = ctx.flight();
-    let low = ctx.param("BATT_LOW_VOLT", Some(10.5));
+    // BATT_LOW_VOLT from the log; the Copter wiki's 10.5 V only for Copter logs
+    let low = ctx.param("BATT_LOW_VOLT", ctx.copter_default(10.5));
     let crt = ctx.param("BATT_CRT_VOLT", None);
-    let timer = ctx
+    let (timer, timer_origin) = ctx
         .param("BATT_LOW_TIMER", Some(10.0))
-        .map_or(10.0, |v| v.0);
+        .unwrap_or((10.0, "param_default"));
     let src_sel = ctx.param("BATT_FS_VOLTSRC", Some(0.0)).map_or(0.0, |v| v.0);
     let mut measured = Map::new();
     let mut evidence = Vec::new();
@@ -1111,16 +1256,7 @@ fn battery_voltage(ctx: &Ctx) -> Check {
     if fs.is_empty() {
         evidence.push("ERR.Subsys=6".into());
     }
-    let mut thresholds = vec![th(
-        "BATT_LOW_TIMER",
-        timer,
-        "s",
-        if log.param("BATT_LOW_TIMER").is_some() {
-            "param"
-        } else {
-            "param_default"
-        },
-    )];
+    let mut thresholds = vec![th("BATT_LOW_TIMER", timer, "s", timer_origin)];
     let mut long_low = false;
     let mut any_low = false;
     if volt.is_empty() && fs.is_empty() && fs_text.is_empty() {
@@ -1168,6 +1304,11 @@ fn battery_voltage(ctx: &Ctx) -> Check {
                 fs.len() + fs_text.len()
             ),
         )
+    } else if long_low && low.is_some_and(|(_, o)| o == "param_default") {
+        (
+            Status::Warn,
+            format!("Battery voltage stayed below the Copter wiki's default BATT_LOW_VOLT of 10.5 V for more than {timer} s; the log has no BATT_LOW_VOLT, so the vehicle's own threshold is unknown."),
+        )
     } else if long_low {
         (
             Status::Fail,
@@ -1178,7 +1319,15 @@ fn battery_voltage(ctx: &Ctx) -> Check {
             Status::Warn,
             "Battery voltage dipped below BATT_LOW_VOLT, for less than the failsafe timer.".into(),
         )
-    } else if low.is_none_or(|(v, _)| v <= 0.0) {
+    } else if low.is_none() {
+        (
+            Status::NotApplicable,
+            format!(
+                "{} has no BATT_LOW_VOLT and the 10.5 V default is the Copter wiki's, so no voltage threshold applies; no battery failsafe was logged.",
+                capitalize(&ctx.this_log())
+            ),
+        )
+    } else if low.is_some_and(|(v, _)| v <= 0.0) {
         (Status::Info, "The voltage failsafe is disabled (BATT_LOW_VOLT = 0) and no battery failsafe was logged.".into())
     } else {
         (
@@ -1253,7 +1402,7 @@ fn power_log_end(ctx: &Ctx) -> Check {
     if ctx.armed_source == "none" {
         return na(ID, "arming state", &[wiki::BROWNOUT]);
     }
-    let ends_armed = ctx.armed.last().is_some_and(|&(_, e)| e >= ctx.end_us);
+    let ends_armed = ctx.ends_armed;
     let mut c = if ends_armed && ctx.log.kind == LogKind::DataFlash {
         check(ID, Status::Warn, "The log ends while the vehicle is armed. The wiki notes brown-outs show up as logs suddenly ending in the air; check altitude at the end.".into())
     } else if ends_armed {
@@ -1274,29 +1423,45 @@ fn power_log_end(ctx: &Ctx) -> Check {
     c
 }
 
+/// Radio failsafe texts: Copter and Rover "Radio Failsafe" ... "Radio
+/// Failsafe Cleared", Plane "Throttle failsafe on" ... "Throttle failsafe off".
+fn radio_text_ranges(ctx: &Ctx) -> Vec<TextRange> {
+    ctx.text_ranges(
+        &|x: &str| {
+            (x.starts_with("Radio Failsafe")
+                || x.starts_with("Radio + Battery Failsafe")
+                || x.starts_with("Throttle failsafe on"))
+                && !x.contains("Cleared")
+        },
+        &|x: &str| {
+            x.starts_with("Radio Failsafe Cleared") || x.starts_with("Throttle failsafe off")
+        },
+    )
+}
+
 fn rc_failsafe(ctx: &Ctx) -> Check {
     const ID: &str = "rc.failsafe";
     let (fs, late): (Vec<TextRange>, Vec<TextRange>) = match ctx.log.kind {
-        LogKind::DataFlash => (
-            ctx.err_ranges(5, &[1], 0)
+        LogKind::DataFlash => {
+            let err: Vec<TextRange> = ctx
+                .err_ranges(5, &[1], 0)
                 .into_iter()
                 .map(|(a, b, _)| (a, b, "ERR Radio Failsafe: Failsafe Triggered".to_string()))
-                .collect(),
-            ctx.err_ranges(2, &[2], 0)
-                .into_iter()
-                .map(|(a, b, _)| (a, b, "ERR Radio: Late Frame".to_string()))
-                .collect(),
-        ),
-        LogKind::Tlog => (
-            ctx.text_ranges(
-                &|x: &str| {
-                    (x.starts_with("Radio Failsafe") || x.starts_with("Radio + Battery Failsafe"))
-                        && !x.contains("Cleared")
+                .collect();
+            (
+                // Plane and Rover do not log ERR for it, only MSG text
+                if err.is_empty() {
+                    radio_text_ranges(ctx)
+                } else {
+                    err
                 },
-                &|x: &str| x.starts_with("Radio Failsafe Cleared"),
-            ),
-            Vec::new(),
-        ),
+                ctx.err_ranges(2, &[2], 0)
+                    .into_iter()
+                    .map(|(a, b, _)| (a, b, "ERR Radio: Late Frame".to_string()))
+                    .collect(),
+            )
+        }
+        LogKind::Tlog => (radio_text_ranges(ctx), Vec::new()),
     };
     let mut c = if !fs.is_empty() {
         check(
@@ -1317,7 +1482,7 @@ fn rc_failsafe(ctx: &Ctx) -> Check {
             "No radio failsafe or late RC frames were logged.".into(),
         )
     };
-    if let Some((v, origin)) = ctx.param("RC_FS_TIMEOUT", Some(1.0)) {
+    if let Some((v, origin)) = ctx.param("RC_FS_TIMEOUT", ctx.copter_default(1.0)) {
         c.thresholds.push(th("RC_FS_TIMEOUT", v, "s", origin));
     }
     c.measured.insert("failsafes".into(), json!(fs.len()));
@@ -1328,10 +1493,10 @@ fn rc_failsafe(ctx: &Ctx) -> Check {
         .map(|(a, b, d)| ctx.range(*a, *b, d.clone()))
         .collect();
     c.ranges.sort_by_key(|r| r.start_us);
-    c.evidence = vec![match ctx.log.kind {
-        LogKind::DataFlash => "ERR.Subsys=2,5".into(),
-        LogKind::Tlog => "STATUSTEXT.text".into(),
-    }];
+    c.evidence = match ctx.log.kind {
+        LogKind::DataFlash => vec!["ERR.Subsys=2,5".into(), "MSG.Message".into()],
+        LogKind::Tlog => vec!["STATUSTEXT.text".into()],
+    };
     c.sources = src(&[wiki::RADIO_FAILSAFE, wiki::ERR_TABLE]);
     c
 }
@@ -1339,17 +1504,28 @@ fn rc_failsafe(ctx: &Ctx) -> Check {
 fn gcs_failsafe(ctx: &Ctx) -> Check {
     const ID: &str = "link.gcs_failsafe";
     let log = ctx.log;
-    let timeout = ctx.param("FS_GCS_TIMEOUT", Some(5.0));
-    let fs: Vec<(u64, u64, String)> = match log.kind {
-        LogKind::DataFlash => ctx
-            .err_ranges(8, &[1], 0)
-            .into_iter()
-            .map(|(a, b, _)| (a, b, "ERR GCS Failsafe: Failsafe Triggered".to_string()))
-            .collect(),
-        LogKind::Tlog => ctx.text_ranges(
+    let timeout = ctx.param("FS_GCS_TIMEOUT", ctx.copter_default(5.0));
+    let texts = || {
+        ctx.text_ranges(
             &|x: &str| x.starts_with("GCS Failsafe") && !x.contains("Cleared"),
             &|x: &str| x.starts_with("GCS Failsafe Cleared"),
-        ),
+        )
+    };
+    let fs: Vec<(u64, u64, String)> = match log.kind {
+        LogKind::DataFlash => {
+            let err: Vec<TextRange> = ctx
+                .err_ranges(8, &[1], 0)
+                .into_iter()
+                .map(|(a, b, _)| (a, b, "ERR GCS Failsafe: Failsafe Triggered".to_string()))
+                .collect();
+            // Plane and Rover do not log ERR for it, only MSG text
+            if err.is_empty() {
+                texts()
+            } else {
+                err
+            }
+        }
+        LogKind::Tlog => texts(),
     };
     // tlog: gaps in the vehicle's heartbeats while armed, as the ground station saw them
     let mut gaps: Vec<(u64, u64)> = Vec::new();
@@ -1401,10 +1577,10 @@ fn gcs_failsafe(ctx: &Ctx) -> Check {
             .map(|&(a, b)| ctx.range(a, b, "no vehicle heartbeat received")),
     );
     c.ranges.sort_by_key(|r| r.start_us);
-    c.evidence = vec![match log.kind {
-        LogKind::DataFlash => "ERR.Subsys=8".into(),
-        LogKind::Tlog => "STATUSTEXT.text, HEARTBEAT.timestamp_us".into(),
-    }];
+    c.evidence = match log.kind {
+        LogKind::DataFlash => vec!["ERR.Subsys=8".into(), "MSG.Message".into()],
+        LogKind::Tlog => vec!["STATUSTEXT.text".into(), "HEARTBEAT.timestamp_us".into()],
+    };
     c.sources = src(&[wiki::GCS_FAILSAFE, wiki::ERR_TABLE]);
     c
 }

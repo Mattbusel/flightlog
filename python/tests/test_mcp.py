@@ -63,3 +63,30 @@ def test_server_lists_read_only_tools(store, mini_bin):
     content = res.content if hasattr(res, "content") else res[0]
     text = content[0].text
     assert json.loads(text)["id"] == "vibration.levels"
+
+
+def test_tool_errors_reach_the_client(store, mini_bin):
+    mcp = pytest.importorskip("mcp")
+    Client = getattr(mcp, "Client", None)
+    if Client is None:
+        pytest.skip("mcp.Client (in-process client) needs mcp 2")
+    server = m.build_server(store)
+
+    async def go():
+        async with Client(server) as c:
+            bad_msg = await c.call_tool("query_messages", {"path": str(mini_bin), "message": "NOPE"})
+            bad_field = await c.call_tool("query_messages", {"path": str(mini_bin), "message": "PARM", "fields": ["Nope"]})
+            outside = await c.call_tool("log_overview", {"path": "../../../etc/passwd"})
+            return bad_msg, bad_field, outside
+
+    bad_msg, bad_field, outside = asyncio.run(go())
+    for res in (bad_msg, bad_field, outside):
+        assert getattr(res, "is_error", getattr(res, "isError", None)) is True
+    assert "NOPE" in bad_msg.content[0].text
+    assert "Nope" in bad_field.content[0].text and "Value" in bad_field.content[0].text
+    assert "outside the allowed directories" in outside.content[0].text
+
+
+def test_window_rejects_non_finite_times(store, mini_bin):
+    with pytest.raises(ValueError, match="finite"):
+        m.query_messages(store, str(mini_bin), "PARM", start_s=float("nan"))

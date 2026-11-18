@@ -10,6 +10,9 @@ pub(crate) struct Series {
 }
 
 impl Series {
+    /// Values of `field` with their timestamps. Rows whose timestamp lies
+    /// outside the log's time range ([`Log::time_range_us`], which leaves
+    /// out isolated damaged timestamps) are dropped.
     pub fn from_table(
         log: &Log,
         table: &Table,
@@ -18,11 +21,15 @@ impl Series {
     ) -> Option<Series> {
         let tc = table.column(log.time_column())?;
         let vc = table.column(field)?;
+        let (lo, hi) = log.time_range_us().unwrap_or((0, u64::MAX));
         let mut s = Series::default();
         let mut push = |i: usize| {
             if let (Some(t), Some(v)) = (tc.data.get_f64(i), vc.data.get_f64(i)) {
-                s.t.push(t as u64);
-                s.v.push(v);
+                let t = t as u64;
+                if t >= lo && t <= hi {
+                    s.t.push(t);
+                    s.v.push(v);
+                }
             }
         };
         match rows {
@@ -162,8 +169,14 @@ pub(crate) fn distinct(table: &Table, field: &str) -> Vec<i64> {
     out
 }
 
-/// Armed time ranges and where they came from.
-pub(crate) fn armed_ranges(log: &Log, end: u64) -> (Vec<(u64, u64)>, &'static str) {
+/// Armed ranges, where they came from, and whether the log ends armed (the
+/// last range has no disarm and runs to `end`). Arming changes logged at a
+/// time outside `start..=end` (damaged timestamps) are ignored.
+pub(crate) fn armed_ranges(
+    log: &Log,
+    start: u64,
+    end: u64,
+) -> (Vec<(u64, u64)>, &'static str, bool) {
     let mut changes: Vec<(u64, bool)> = Vec::new();
     let source;
     match log.kind {
@@ -190,12 +203,12 @@ pub(crate) fn armed_ranges(log: &Log, end: u64) -> (Vec<(u64, u64)>, &'static st
                     }
                 }
             } else {
-                return (Vec::new(), "none");
+                return (Vec::new(), "none", false);
             }
         }
         LogKind::Tlog => {
             let Some(hb) = log.table("HEARTBEAT") else {
-                return (Vec::new(), "none");
+                return (Vec::new(), "none", false);
             };
             source = "HEARTBEAT.base_mode";
             let sys = vehicle_sys_id(log);
@@ -206,7 +219,7 @@ pub(crate) fn armed_ranges(log: &Log, end: u64) -> (Vec<(u64, u64)>, &'static st
                 hb.column("autopilot"),
                 hb.column("type"),
             ) else {
-                return (Vec::new(), "none");
+                return (Vec::new(), "none", false);
             };
             let mut last: Option<bool> = None;
             for i in 0..hb.len() {
@@ -226,21 +239,25 @@ pub(crate) fn armed_ranges(log: &Log, end: u64) -> (Vec<(u64, u64)>, &'static st
         }
     }
     let mut out = Vec::new();
-    let mut start: Option<u64> = None;
+    let mut since: Option<u64> = None;
     for (t, armed) in changes {
-        match (armed, start) {
-            (true, None) => start = Some(t),
+        if t < start || t > end {
+            continue;
+        }
+        match (armed, since) {
+            (true, None) => since = Some(t),
             (false, Some(s)) => {
                 out.push((s, t));
-                start = None;
+                since = None;
             }
             _ => {}
         }
     }
-    if let Some(s) = start {
+    let open = since.is_some();
+    if let Some(s) = since {
         out.push((s, end.max(s)));
     }
-    (out, source)
+    (out, source, open)
 }
 
 /// System id of the vehicle in a tlog: the most common sender of non-GCS heartbeats.

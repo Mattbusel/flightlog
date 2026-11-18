@@ -39,7 +39,8 @@
         "truncated_tail_bytes": {"type": "integer", "minimum": 0},
         "bad_crc": {"type": "integer", "minimum": 0},
         "invalid_formats": {"type": "array", "items": {"type": "string"}},
-        "clean": {"type": "boolean"}
+        "time_outliers": {"type": "integer", "minimum": 0, "description": "rows whose timestamp lies outside the log's time range (isolated, normally damaged, timestamps); since 1.1"},
+        "clean": {"type": "boolean", "description": "nothing skipped, no bad checksum, no rejected format; a cut-off final message does not count"}
       }
     },
     "armed": {
@@ -56,7 +57,7 @@
       "additionalProperties": {
         "type": "object",
         "required": ["value", "origin"],
-        "properties": {"value": {"type": ["number", "null"]}, "origin": {"enum": ["param", "param_default"]}}
+        "properties": {"value": {"type": ["number", "null"]}, "origin": {"enum": ["param", "param_default", "param_invalid"], "description": "param: read from the log; param_default: the wiki default, because the log has no value; param_invalid: the log's value is not a finite number (value null), the check used the wiki default if it has one; since 1.1"}}
       }
     },
     "summary": {

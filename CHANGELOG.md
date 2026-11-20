@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.2 (2026-11-20)
+
+Documentation and metadata only; no change to the library code.
+
+- README opens with the damaged-log result: pymavlink 2.4.50 does not open
+  `copter-mission-bitflip.bin`; flightlog reads 134,878 of its 134,976
+  messages. crates.io description and keywords say the same.
+
 ## 0.1.1 (2026-11-17)
 
 Fixes from an independent review of 0.1.0. flight-facts is now 1.1; a 1.0

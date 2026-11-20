@@ -11,7 +11,7 @@ flightlog-mcp --root /path/to/logs [--root /other/dir] [--max-bytes N]
 ```
 
 Until `flightlog` is on PyPI, install the wheel from the GitHub release:
-`pip install flightlog --find-links https://github.com/Mattbusel/flightlog/releases/expanded_assets/v0.1.1`
+`pip install flightlog --find-links https://github.com/Mattbusel/flightlog/releases/expanded_assets/v0.1.2`
 (add `"flightlog[mcp]"` or `"flightlog[polars]"` the same way).
 
 Transport is stdio. Only files under the `--root` directories can be read

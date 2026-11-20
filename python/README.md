@@ -10,7 +10,7 @@ pip install "flightlog[mcp]"     # plus the flightlog-mcp server
 ```
 
 Until `flightlog` is on PyPI, install the wheel from the GitHub release:
-`pip install flightlog --find-links https://github.com/Mattbusel/flightlog/releases/expanded_assets/v0.1.1`
+`pip install flightlog --find-links https://github.com/Mattbusel/flightlog/releases/expanded_assets/v0.1.2`
 (add `"flightlog[mcp]"` or `"flightlog[polars]"` the same way).
 
 ```python

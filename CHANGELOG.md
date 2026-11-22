@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3 (2026-11-21)
+
+- `flightlog_core::dataflash::f16_to_f32` is public, so readers that decode
+  DataFlash fields one at a time can handle the `g` (float16) format
+  character the same way flightlog does.
+
 ## 0.1.2 (2026-11-20)
 
 Documentation and metadata only; no change to the library code.

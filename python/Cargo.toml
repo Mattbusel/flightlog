@@ -13,7 +13,7 @@ name = "_flightlog"
 crate-type = ["cdylib"]
 
 [dependencies]
-flightlog-core = { path = "../flightlog-core", version = "0.1.3", features = ["arrow", "facts"] }
+flightlog-core = { path = "../flightlog-core", version = "0.2.0", features = ["arrow", "facts"] }
 pyo3 = { version = "0.30", features = ["extension-module", "abi3-py39"] }
 pyo3-arrow = { version = "0.21", default-features = false }
 arrow-array = { version = "60.1", default-features = false }

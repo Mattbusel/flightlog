@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.2.0 (2026-11-22)
+
+New features; nothing removed or changed in the 0.1 API.
+
+- PX4 ULog reader (`flightlog_core::ulog::ULog`): every topic as a `Table`
+  (nested types and arrays flattened with pyulog's column names, a
+  `multi_id` instance column), info and multi-part info messages, initial
+  parameters, in-flight changes, system and airframe defaults
+  (`non_default_params`), tagged and untagged console messages, logger
+  dropouts, appended data after a crash. Damaged files are recovered on the
+  ULog sync sequence like pyulog, and every unused byte is counted in
+  `integrity`. Checked against pyulog 1.3.0 on its five test logs
+  (`tests/ulog_reference.rs`, `tools/pyulog_reference.py`): same topics,
+  rows, field sums, parameters, messages and dropouts.
+- `FlightLog`: one type over `.bin`, `.tlog` and `.ulg`, detected from the
+  content, with `table`, `params`, `integrity`, `time_range_us`, `track`
+  and `events`.
+- `track`: GPS track from DataFlash `GPS`, tlog `GPS_RAW_INT` and PX4
+  `vehicle_gps_position` / `sensor_gps` (old integer and v1.15 double
+  fields), 3D fixes only; `to_gpx` and `to_kml`.
+- `events`: mode changes, arming, failsafe start and end, PX4 failure
+  detector trips and console warnings for PX4; the flight-facts events for
+  ArduPilot.
+- Example `flight`: prints a log's events and writes its track as GPX and KML.
+
 ## 0.1.3 (2026-11-21)
 
 - `flightlog_core::dataflash::f16_to_f32` is public, so readers that decode

@@ -36,6 +36,20 @@ which makes the logs useful for checking the flight-facts rules:
 They are attached to the `testdata-v1` GitHub release; `testdata/SHA256SUMS`
 pins them.
 
+### PX4 ULog
+
+The five ULog files from pyulog's test suite (`sample.ulg`,
+`sample_appended.ulg`, `sample_appended_multiple.ulg`,
+`sample_logging_tagged_and_default_params.ulg`, `sample_px4_events.ulg`,
+BSD-3-Clause) are downloaded from PX4/pyulog commit
+`0b392f8444f843b796405b9766cc15a6dddedf62` into `testdata/external/ulog/`
+and pinned by `testdata/ULOG_SHA256SUMS`. `testdata/<log>.pyulog.json` is
+what pyulog 1.3.0 reads from each (`python tools/pyulog_reference.py LOG`);
+`tests/ulog_reference.rs` compares every topic, row count, field sum,
+parameter, message and dropout. `tests/ulog_crafted.rs` builds ULog files
+byte by byte (every message type, damage, appended data, hostile formats)
+and runs without downloads.
+
 ### tlogs and SIM_SPEEDUP
 
 The autotests run SITL faster than real time (`SIM_SPEEDUP` 100 in

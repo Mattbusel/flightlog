@@ -1,8 +1,11 @@
 //! Flight logs as tables.
 //!
 //! `flightlog-core` reads ArduPilot DataFlash logs (`.bin`, written on the
-//! vehicle) and MAVLink telemetry logs (`.tlog`, written by the ground
-//! station) into one typed, columnar [`Table`] per message type, and runs
+//! vehicle), MAVLink telemetry logs (`.tlog`, written by the ground
+//! station) and PX4 ULog files (`.ulg`, [`ulog`]) into one typed, columnar
+//! [`Table`] per message type. [`FlightLog`] opens any of them; [`track`]
+//! exports the GPS track as GPX or KML, [`events`] lists mode changes,
+//! arming, failsafes and warnings. For ArduPilot logs it also runs
 //! **flight-facts**: deterministic checks whose thresholds come from the
 //! ArduPilot wiki, each reported with the wiki link, the measured values and
 //! the time ranges involved.
@@ -32,8 +35,12 @@
 
 pub mod column;
 pub mod dataflash;
+pub mod events;
+mod flight;
 mod log;
 pub mod tlog;
+pub mod track;
+pub mod ulog;
 
 #[cfg(feature = "arrow")]
 pub mod arrow;
@@ -41,6 +48,7 @@ pub mod arrow;
 pub mod facts;
 
 pub use column::{Column, ColumnData, DataType, Table, VarData};
+pub use flight::FlightLog;
 pub use log::{Integrity, Log, LogKind, ReadOptions, SkippedRegion, MAX_REGIONS};
 
 /// Errors from opening a log.

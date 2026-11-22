@@ -264,22 +264,9 @@ impl Log {
     }
 
     fn time_span(&self) -> TimeSpan {
-        *self.time.get_or_init(|| {
-            let col = self.time_column();
-            let mut ts: Vec<(u64, bool)> = Vec::new();
-            for t in &self.tables {
-                if let Some(c) = t.column(col) {
-                    // Some messages log TimeUS 0 before the clock starts.
-                    let v: Vec<u64> = (0..c.data.len())
-                        .filter_map(|i| c.data.get_f64(i))
-                        .filter(|v| *v > 0.0 && v.is_finite())
-                        .map(|v| v as u64)
-                        .collect();
-                    ts.extend(in_order(&v));
-                }
-            }
-            time_span(ts)
-        })
+        *self
+            .time
+            .get_or_init(|| tables_time_span(&self.tables, self.time_column()))
     }
 
     pub(crate) fn from_parts(
@@ -308,6 +295,27 @@ impl Log {
             time: OnceLock::new(),
         }
     }
+}
+
+fn tables_time_span(tables: &[Table], col: &str) -> TimeSpan {
+    let mut ts: Vec<(u64, bool)> = Vec::new();
+    for t in tables {
+        if let Some(c) = t.column(col) {
+            // Some messages log TimeUS 0 before the clock starts.
+            let v: Vec<u64> = (0..c.data.len())
+                .filter_map(|i| c.data.get_f64(i))
+                .filter(|v| *v > 0.0 && v.is_finite())
+                .map(|v| v as u64)
+                .collect();
+            ts.extend(in_order(&v));
+        }
+    }
+    time_span(ts)
+}
+
+/// [`Log::time_range_us`] over any set of tables with a time column.
+pub(crate) fn table_time_range(tables: &[Table], col: &str) -> Option<(u64, u64)> {
+    tables_time_span(tables, col).range
 }
 
 /// Each timestamp of one table with whether it is in order with its

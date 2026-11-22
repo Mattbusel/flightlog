@@ -6,10 +6,10 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 rust-version = "1.88"
-description = "Your log tool dies on the one log you need: the one from the crash. pymavlink refuses a DataFlash .bin with 64 flipped bytes; flightlog reads 134,878 of its 134,976 messages and accounts for every skipped byte. ArduPilot DataFlash (.bin) and MAVLink .tlog as typed columnar tables (Arrow optional), equal to pymavlink on 2.7M messages, plus flight-facts: log checks that cite ArduPilot wiki thresholds"
+description = "Your log tool dies on the one log you need: the one from the crash. pymavlink refuses a DataFlash .bin with 64 flipped bytes; flightlog reads 134,878 of its 134,976 messages and accounts for every skipped byte. ArduPilot DataFlash (.bin), MAVLink .tlog and PX4 ULog (.ulg) as typed columnar tables (Arrow optional), equal to pymavlink on 2.7M messages and to pyulog on its test logs; GPX/KML track export, flight events, and flight-facts: log checks that cite ArduPilot wiki thresholds"
 documentation = "https://docs.rs/flightlog-core"
 readme = "README.md"
-keywords = ["ardupilot", "mavlink", "dataflash", "flight-log", "arrow"]
+keywords = ["ardupilot", "px4", "ulog", "mavlink", "flight-log"]
 categories = ["aerospace::drones", "parser-implementations", "science"]
 exclude = ["tests/"]
 
@@ -37,4 +37,8 @@ all-features = true
 
 [[example]]
 name = "facts"
+required-features = ["facts"]
+
+[[example]]
+name = "flight"
 required-features = ["facts"]

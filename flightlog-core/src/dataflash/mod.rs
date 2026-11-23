@@ -15,7 +15,7 @@ mod format;
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 
-pub use format::{f16_to_f32, field_size, Format};
+pub use format::{f16_to_f32, field_size, scale, Format};
 
 use crate::column::{Column, ColumnData, Table, VarData};
 use crate::log::{Integrity, Log, LogKind, ReadOptions};

@@ -20,8 +20,29 @@ pub fn field_size(c: u8) -> Option<usize> {
     })
 }
 
+/// The multiplier ArduPilot's DataFlash format bakes into a field's raw
+/// little-endian integer for the given format character.
+///
+/// `c`/`C`/`e`/`E` are stored times 100 (so the scale is `1e-2`); `L`
+/// (latitude and longitude) is stored in 1e7 fixed-point degrees (so the
+/// scale is `1e-7`, and a raw `350123456` is `35.0123456` degrees). Every
+/// other character is stored unscaled and returns `1.0`.
+///
+/// ```
+/// assert_eq!(flightlog_core::dataflash::scale(b'L'), 1e-7);
+/// assert_eq!(flightlog_core::dataflash::scale(b'c'), 1e-2);
+/// assert_eq!(flightlog_core::dataflash::scale(b'i'), 1.0);
+/// ```
+pub fn scale(c: u8) -> f64 {
+    match c {
+        b'c' | b'C' | b'e' | b'E' => 1e-2,
+        b'L' => 1e-7,
+        _ => 1.0,
+    }
+}
+
 fn scaled(c: u8) -> bool {
-    matches!(c, b'c' | b'C' | b'e' | b'E' | b'L')
+    scale(c) != 1.0
 }
 
 /// One message type definition.

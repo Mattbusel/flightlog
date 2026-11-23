@@ -8,7 +8,10 @@
 //! arming, failsafes and warnings. For ArduPilot logs it also runs
 //! **flight-facts**: deterministic checks whose thresholds come from the
 //! ArduPilot wiki, each reported with the wiki link, the measured values and
-//! the time ranges involved.
+//! the time ranges involved. [`report`] answers the operational questions
+//! about one flight: how long, how high and how far it flew, why it ended
+//! (clean landing, failsafe, lost recording, or crash signature), and whether
+//! it exceeded a height ceiling such as the 400 ft FAA Part 107 limit.
 //!
 //! ```no_run
 //! use flightlog_core::{Log, ReadOptions};
@@ -46,6 +49,8 @@ pub mod ulog;
 pub mod arrow;
 #[cfg(feature = "facts")]
 pub mod facts;
+#[cfg(feature = "facts")]
+pub mod report;
 
 pub use column::{Column, ColumnData, DataType, Table, VarData};
 pub use flight::FlightLog;

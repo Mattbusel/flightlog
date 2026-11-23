@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.3.0 (2026-11-22)
+
+New feature; nothing removed or changed in the existing API.
+
+- `flightlog_core::report`: the flight report. From an ArduPilot (`.bin`,
+  `.tlog`) or PX4 (`.ulg`) log, `report::build` answers the three questions
+  an investigator, insurer or regulator asks about a flight, every number
+  read from the log:
+  - **what the flight did** (`FlightSummary`): armed time, greatest height
+    above the takeoff point, greatest distance from it, and top ground speed,
+    each tagged with the field it came from (`POS.RelHomeAlt`,
+    `GLOBAL_POSITION_INT.relative_alt`, `vehicle_local_position.z`, `GPS.Spd`,
+    `VFR_HUD.groundspeed`, GPS haversine, ...), plus takeoff/landing position
+    and UTC start when the log has them;
+  - **why it ended** (`Ending`): a normal landing, a failsafe that brought the
+    vehicle down (which failsafe, and whether it forced the return/land mode
+    or was merely active at touchdown), a recording that stopped while the
+    vehicle was still airborne, or a crash signature (a logged crash message,
+    a PX4 failure-detector trip, or a steep terminal descent while still
+    armed). Each verdict lists the events it rests on and says whether the
+    firmware reported it or flightlog inferred it;
+  - **did it break the rules** (`AltitudeCompliance`): whether the height
+    exceeded a ceiling, by default 400 ft above the takeoff point (the FAA
+    Part 107 limit, 14 CFR 107.51(b)(1)), with the time ranges above it.
+  Deterministic and serde-serializable (`to_json` / `to_json_pretty`). Behind
+  the default `facts` feature. Validated on the ArduPilot SITL autotest logs
+  and PX4 sample logs (`tests/report.rs`).
+- Example `report`: prints the report, or `--json` for the full document.
+
 ## 0.2.0 (2026-11-22)
 
 New features; nothing removed or changed in the 0.1 API.

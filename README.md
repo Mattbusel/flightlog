@@ -57,6 +57,11 @@ quotes the ArduPilot wiki sentence its threshold comes from.
   (vibration, clipping, EKF variance, GPS, battery, board voltage, RC and GCS
   failsafes). Each check quotes the ArduPilot wiki sentence its threshold
   comes from and gives the time ranges involved.
+- **flight report** (`report`): one flight's summary (duration, height above
+  takeoff, distance, top speed), why it ended (clean landing, failsafe,
+  recording lost in flight, or a crash signature), and whether it broke a
+  height ceiling such as the 400 ft FAA Part 107 limit. The real-world result,
+  not a row dump.
 - **flightlog-mcp**: a read-only MCP server so an assistant can read the facts
   and the rows behind them.
 
@@ -131,6 +136,50 @@ it could not use, so you know whether the gap is in the seconds you care
 about. Events read `vehicle_status` (mode, arming, failsafe, failure
 detector) and warnings from the console log; GPS tracks keep 3D fixes only
 and drop the 0, 0 positions receivers report before their first fix.
+
+## Flight report: what happened, and did it break the rules
+
+`report::build` turns any `.bin`, `.tlog` or `.ulg` into the three answers an
+investigator, insurer or regulator asks about a flight, every number read
+from the log, nothing modelled:
+
+- **what the flight did**: armed time, greatest height above the takeoff
+  point, greatest distance from it, top ground speed, each tagged with the
+  field it was read from;
+- **why it ended**: a normal landing, a failsafe that brought the vehicle
+  down (which one, and whether it forced the return/land mode), a recording
+  that stopped while still airborne, or a crash signature (a logged crash, a
+  PX4 failure-detector trip, or a steep terminal descent while still armed);
+- **did it break a height ceiling**: by default 400 ft above the takeoff
+  point, the FAA Part 107 limit (14 CFR 107.51(b)(1)), with the time ranges
+  above it.
+
+```rust
+use flightlog_core::{report, FlightLog, ReadOptions};
+
+let log = FlightLog::open("copter-battery-failsafe.bin", &ReadOptions::default())?;
+let r = report::build(&log, &report::ReportOptions::default());
+println!("{}", r.ending.summary);
+```
+
+`cargo run --example report -- copter-battery-failsafe.bin` on the ArduPilot
+SITL battery-failsafe autotest:
+
+```text
+  SUMMARY : Flew 134 s, up to 50 m (164 ft) above takeoff, out to 78 m, top ground speed 9.7 m/s.
+  ENDING  : The flight ended because of a Battery Failsafe: the vehicle went to LAND and came down.
+            - 119.982s Battery Failsafe triggered and was not resolved before the flight ended
+            - 119.982s entered LAND after the failsafe
+  ALTITUDE: Stayed under the 400 ft (122 m) ceiling: peak 50 m (164 ft) above takeoff.
+```
+
+The verdict names the events it rests on and says whether the firmware
+reported it (a failsafe event, a crash message, a disarm) or flightlog
+inferred it from the height and armed state. A clean mission reads as
+`Normal end of flight`; a radio failsafe as `ended because of a Radio
+Failsafe: the vehicle went to RTL`; a GPS glitch that recovered still lands
+normally. The report is deterministic and serializes to JSON
+(`to_json_pretty`, add `--json` to the example).
 
 ## Docs
 
